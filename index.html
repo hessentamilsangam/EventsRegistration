@@ -1,171 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Registration Checker</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background: #f7f7f7;
-        color: #333;
-    }
-
-    h2 {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .container {
-        max-width: 450px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    input {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        margin-top: 10px;
-    }
-
-    button {
-        width: 100%;
-        padding: 12px;
-        background: #007bff;
-        border: none;
-        color: white;
-        font-size: 16px;
-        margin-top: 15px;
-        cursor: pointer;
-        border-radius: 6px;
-    }
-
-    button:hover {
-        background: #0056b3;
-    }
-
-    #result {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 18px;
-        font-weight: bold;
-        min-height: 24px;
-    }
-
-    .success { color: green; }
-    .warning { color: orange; }
-    .error { color: red; }
-
-    #qr-reader {
-        margin-top: 20px;
-        display: none;
-    }
-
-    .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #007bff;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        animation: spin 1s linear infinite;
-        margin: 12px auto;
-        display: none;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+  body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+  .box {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+  }
+  input, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 12px;
+      border-radius: 6px;
+  }
+  button { background: #007bff; border: none; color: white; }
+  button:hover { background: #0056b3; }
+  #qr-reader { margin-top: 20px; display: none; }
+  #result { text-align: center; margin-top: 20px; font-size: 18px; }
+  .error { color: red; }
+  .success { color: green; }
+  .warning { color: orange; }
 </style>
 </head>
 
 <body>
 
-<h2>Registration Verification</h2>
-
-<div class="container">
-
-    <button onclick="startQrScanner()">📷 Scan QR Code</button>
-
-    <div id="qr-reader"></div>
-
-    <input id="regIdInput" placeholder="Or enter Registration ID manually" />
-
-    <button onclick="submitId()">Submit</button>
-
-    <div class="spinner" id="loadingSpinner"></div>
-
-    <div id="result"></div>
-
+<div id="passwordScreen" class="box">
+    <h3>Enter Password</h3>
+    <input type="password" id="passwordInput" placeholder="Password">
+    <button onclick="checkPassword()">Login</button>
+    <p id="passError" class="error"></p>
 </div>
 
+<div id="mainScreen" style="display:none;">
+    <h2 style="text-align:center;">Registration Verification</h2>
+    <div class="box">
+
+        <!-- Scan Button -->
+        <button onclick="startScanning()">📷 Scan QR Code</button>
+
+        <!-- QR Camera Window -->
+        <div id="qr-reader"></div>
+
+        <!-- Manual entry -->
+        <input id="regIdInput" placeholder="Registration ID">
+
+        <!-- Manual submit -->
+        <button onclick="submitId()">Submit</button>
+
+        <div id="result"></div>
+    </div>
+</div>
+
+
 <script>
-const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE";  // <-- Replace with your real URL
-let qrScanner = null;
-let scannerRunning = false;
+/* -------------------------
+   SIMPLE PASSWORD PROTECTION
+------------------------- */
+const APP_PASSWORD = "YOUR_PASSWORD_HERE"; // <-- set your simple password
 
-// 🔵 Start QR Scanner when user clicks button
-function startQrScanner() {
-    const qrDiv = document.getElementById("qr-reader");
+function checkPassword() {
+    let entered = document.getElementById("passwordInput").value.trim();
+    if (entered === APP_PASSWORD) {
+        document.getElementById("passwordScreen").style.display = "none";
+        document.getElementById("mainScreen").style.display = "block";
+    } else {
+        document.getElementById("passError").innerText = "Incorrect password";
+    }
+}
 
-    if (scannerRunning) {
-        stopScanner();
+/* -------------------------
+   QR CODE SCANNER
+------------------------- */
+let scanner = null;
+let scanning = false;
+
+function startScanning() {
+    let qrDiv = document.getElementById("qr-reader");
+
+    if (scanning) {
+        stopScanning();
         return;
     }
 
     qrDiv.style.display = "block";
-
-    qrScanner = new Html5Qrcode("qr-reader");
+    scanner = new Html5Qrcode("qr-reader");
 
     Html5Qrcode.getCameras().then(devices => {
-        if (devices.length > 0) {
-            scannerRunning = true;
-            qrScanner.start(
-                devices[0].id,
-                { fps: 10, qrbox: 250 },
-                qrCodeMessage => {
-                    stopScanner();
-                    submitId(qrCodeMessage);
-                }
-            );
-        }
-    }).catch(err => {
-        showResult("Camera access denied or unavailable.", "error");
+        // Prefer BACK CAMERA
+        let backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+
+        scanning = true;
+        scanner.start(
+            backCam.id,
+            { fps: 10, qrbox: 250 },
+            qrText => {
+                document.getElementById("regIdInput").value = qrText; // fill only
+                stopScanning();
+            }
+        );
+    }).catch(() => {
+        showResult("Camera not accessible", "error");
     });
 }
 
-// 🔴 Stop scanner after scan
-function stopScanner() {
-    if (qrScanner && scannerRunning) {
-        qrScanner.stop().then(() => {
+function stopScanning() {
+    if (scanner && scanning) {
+        scanner.stop().then(() => {
             document.getElementById("qr-reader").style.display = "none";
-            scannerRunning = false;
+            scanning = false;
         });
     }
 }
 
-// 🟢 Submit ID manually or from QR
-function submitId(id = null) {
-    const inputEl = document.getElementById("regIdInput");
-    const regId = id || inputEl.value.trim();
+/* -------------------------
+   SUBMIT ID TO GOOGLE SCRIPT
+------------------------- */
+const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE";  // <-- replace this
 
+function submitId() {
+    const regId = document.getElementById("regIdInput").value.trim();
     if (!regId) {
-        showResult("Please enter or scan registration ID", "warning");
+        showResult("Enter or scan a registration ID", "warning");
         return;
     }
-
-    showLoader(true);
 
     fetch(WEB_APP_URL + "?registrationId=" + encodeURIComponent(regId))
         .then(res => res.text())
@@ -175,23 +144,17 @@ function submitId(id = null) {
             else showResult("Invalid registrationId", "error");
         })
         .catch(() => {
-            showResult("Error contacting server", "error");
-        })
-        .finally(() => {
-            showLoader(false);
+            showResult("Server error. Try again.", "error");
         });
 }
 
-// ✳️ Show loading spinner
-function showLoader(show) {
-    document.getElementById("loadingSpinner").style.display = show ? "block" : "none";
-}
-
-// ✳️ Color-coded results
+/* -------------------------
+   UTILS
+------------------------- */
 function showResult(msg, type) {
-    let el = document.getElementById("result");
-    el.className = type;
-    el.innerText = msg;
+    let r = document.getElementById("result");
+    r.className = type;
+    r.innerText = msg;
 }
 </script>
 
