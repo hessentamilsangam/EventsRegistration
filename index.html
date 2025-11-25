@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance Checker</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { padding: 10px; width: 250px; }
+    button { padding: 10px 20px; }
+    #result { margin-top: 20px; font-size: 18px; }
+  </style>
+
+  <!-- QR Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+<h2>Scan QR Code or Enter Registration ID</h2>
+
+<div id="qr-reader" style="width:300px"></div>
+<br>
+
+<input id="regIdInput" placeholder="Enter Registration ID manually">
+<button onclick="submitId()">Submit</button>
+
+<div id="result"></div>
+
+<script>
+const WEB_APP_URL = "YOUR_WEB_APP_URL"; // <-- paste your Google Apps Script Web App URL
+
+function submitId(id = null) {
+  const regId = id || document.getElementById("regIdInput").value.trim();
+  if (!regId) {
+    alert("Please enter registration ID");
+    return;
+  }
+
+  fetch(WEB_APP_URL + "?registrationId=" + encodeURIComponent(regId))
+    .then(res => res.text())
+    .then(text => {
+      document.getElementById("result").innerHTML = "<b>" + text + "</b>";
+    })
+    .catch(err => {
+      document.getElementById("result").innerHTML = "Error contacting server";
+    });
+}
+
+// QR Code Scanner
+let scanner = new Html5Qrcode("qr-reader");
+
+Html5Qrcode.getCameras().then(devices => {
+  if (devices.length > 0) {
+    scanner.start(
+      devices[0].id,
+      { fps: 10, qrbox: 250 },
+      qrId => {
+        submitId(qrId);
+        scanner.stop();
+      }
+    );
+  }
+});
+</script>
+
+</body>
+</html>
