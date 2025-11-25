@@ -3,90 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Registration Verification</title>
+<title>Registration System</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f2f2f2;
-        margin: 0;
-        padding: 20px;
-    }
-    .box {
-        max-width: 420px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-    }
-    input, button {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        margin-top: 12px;
-        border-radius: 6px;
-    }
-    button {
-        background: #007bff;
-        border: none;
-        color: white;
-        cursor: pointer;
-    }
-    button:hover {
-        background: #0056b3;
-    }
-    #qr-reader {
-        margin-top: 20px;
-        display: none;
-    }
-    #resultBox {
-        margin-top: 20px;
-        padding: 15px;
-        border-radius: 8px;
-        background: #f9f9f9;
-        display: none;
-    }
-    .success { color: green; }
-    .warning { color: orange; }
-    .error { color: red; }
+body { font-family: Arial, sans-serif; background: #f2f2f2; margin: 0; padding: 0;}
+header { background: #007bff; color: white; padding: 15px; text-align:center; font-size:1.2em; }
+nav { display:flex; justify-content:center; background:#eee; }
+nav button { margin:5px; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; background:#007bff; color:white; }
+nav button.active { background:#0056b3; }
+section { display:none; padding:20px; max-width:500px; margin:auto; background:white; border-radius:10px; margin-top:20px;}
+input, button { width:100%; padding:10px; margin-top:10px; font-size:16px; border-radius:6px; }
+button:hover { opacity:0.9; }
+#qr-reader { margin-top:15px; display:none;}
+#resultBox, #dashboardTable { margin-top:15px;}
+#resultBox { padding:15px; background:#f9f9f9; border-radius:8px; display:none;}
+.success { color:green; } .warning { color:orange; } .error { color:red; }
+table { width:100%; border-collapse:collapse; margin-top:10px;}
+th, td { border:1px solid #ccc; padding:8px; text-align:center;}
+th { background:#007bff; color:white;}
 </style>
 </head>
-
 <body>
 
-<h2 style="text-align:center;">Registration Verification</h2>
+<header>Registration System</header>
+<nav>
+  <button class="tabBtn active" onclick="showSection('scanSection', this)">Scan / Verify</button>
+  <button class="tabBtn" onclick="showSection('dashboardSection', this)">Dashboard</button>
+</nav>
 
-<div class="box">
+<!-- SCAN / VERIFY SECTION -->
+<section id="scanSection" style="display:block;">
+  <input type="password" id="passwordInput" placeholder="Enter password">
+  <button onclick="startScanning()">📷 Scan QR Code</button>
+  <div id="qr-reader"></div>
+  <input id="regIdInput" placeholder="Registration ID">
+  <button onclick="submitId()">Submit</button>
 
-    <!-- PASSWORD -->
-    <input type="password" id="passwordInput" placeholder="Enter password">
+  <div id="resultBox">
+    <div id="statusMsg"></div>
+    <div id="fullNameMsg"></div>
+    <div id="attendeeMsg"></div>
+  </div>
+</section>
 
-    <!-- Scan Button -->
-    <button onclick="startScanning()">📷 Scan QR Code</button>
-
-    <!-- QR Camera Window -->
-    <div id="qr-reader"></div>
-
-    <!-- Manual entry -->
-    <input id="regIdInput" placeholder="Registration ID">
-
-    <!-- Manual submit -->
-    <button onclick="submitId()">Submit</button>
-
-    <!-- Output -->
-    <div id="resultBox">
-        <div id="statusMsg"></div>
-        <div id="fullNameMsg"></div>
-        <div id="attendeeMsg"></div>
-    </div>
-
-</div>
+<!-- DASHBOARD SECTION -->
+<section id="dashboardSection">
+  <h3 style="text-align:center;">Event Dashboard</h3>
+  <table id="dashboardTable">
+    <thead>
+      <tr>
+        <th>Event Title</th>
+        <th>Total Registrations</th>
+        <th>Status OK</th>
+      </tr>
+    </thead>
+    <tbody id="dashboardBody"></tbody>
+  </table>
+</section>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxp4GqPO9Mmpq6s0aKyS28GJcGembBPMTK-l7fvh3ZX00UfY3pa64SyFmmVjBuHuj-T/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxp4GqPO9Mmpq6s0aKyS28GJcGembBPMTK-l7fvh3ZX00UfY3pa64SyFmmVjBuHuj-T/exec"; // <-- replace with your /exec URL
+
+// TAB SWITCHING
+function showSection(id, btn){
+  document.querySelectorAll('section').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
+  document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(id==='dashboardSection'){ loadDashboard(); }
+}
+
 /* -------------------------
    QR SCANNING
 --------------------------*/
@@ -94,105 +82,86 @@ let scanner = null;
 let scanning = false;
 
 function startScanning() {
-    let qrDiv = document.getElementById("qr-reader");
+  let qrDiv = document.getElementById("qr-reader");
+  if (scanning) { stopScanning(); return; }
 
-    if (scanning) {
+  qrDiv.style.display = "block";
+  scanner = new Html5Qrcode("qr-reader");
+
+  Html5Qrcode.getCameras().then(devices => {
+    let backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+    scanning = true;
+    scanner.start(
+      backCam.id,
+      { fps:10, qrbox:250 },
+      qrText => {
+        document.getElementById("regIdInput").value = qrText;
         stopScanning();
-        return;
-    }
-
-    qrDiv.style.display = "block";
-    scanner = new Html5Qrcode("qr-reader");
-
-    Html5Qrcode.getCameras().then(devices => {
-        let backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
-
-        scanning = true;
-        scanner.start(
-            backCam.id,
-            { fps: 10, qrbox: 250 },
-            qrText => {
-                document.getElementById("regIdInput").value = qrText; // fill only
-                stopScanning();
-            }
-        );
-    }).catch(() => {
-        showStatus("Camera not accessible", "error");
-    });
+      }
+    );
+  }).catch(()=>{ showStatus("Camera not accessible","error"); });
 }
 
-function stopScanning() {
-    if (scanner && scanning) {
-        scanner.stop().then(() => {
-            document.getElementById("qr-reader").style.display = "none";
-            scanning = false;
-        });
-    }
+function stopScanning(){
+  if(scanner && scanning){
+    scanner.stop().then(()=>{
+      document.getElementById("qr-reader").style.display="none";
+      scanning=false;
+    });
+  }
 }
 
 /* -------------------------
-   SUBMIT TO APPS SCRIPT
+   SUBMIT REGISTRATION ID
 --------------------------*/
 function submitId() {
-    const regId = document.getElementById("regIdInput").value.trim();
-    const pass = document.getElementById("passwordInput").value.trim();
+  const regId = document.getElementById("regIdInput").value.trim();
+  const pass = document.getElementById("passwordInput").value.trim();
+  if(!pass){ showStatus("Enter password","error"); return; }
+  if(!regId){ showStatus("Enter or scan registration ID","warning"); return; }
 
-    if (!pass) {
-        showStatus("Enter password", "error");
-        return;
-    }
-    if (!regId) {
-        showStatus("Enter or scan registration ID", "warning");
-        return;
-    }
+  fetch(`${WEB_APP_URL}?mode=verify&registrationId=${encodeURIComponent(regId)}&password=${encodeURIComponent(pass)}`)
+    .then(res=>res.json())
+    .then(data=>handleResponse(data))
+    .catch(()=>showStatus("Server error. Try again.","error"));
+}
 
-    const url = WEB_APP_URL +
-        "?mode=verify&registrationId=" + encodeURIComponent(regId) +
-        "&password=" + encodeURIComponent(pass);
+function handleResponse(data){
+  document.getElementById("resultBox").style.display="block";
 
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            handleResponse(data);
-        })
-        .catch(() => showStatus("Server error. Try again.", "error"));
+  if(data.status==="AUTH_FAILED"){ showStatus("Incorrect password","error"); return; }
+  if(data.status==="MISSING_ID"){ showStatus("Missing registration ID","error"); return; }
+
+  let cssClass = data.status==="Updated successfully"?"success":
+                 data.status==="Already updated"?"warning":"error";
+
+  showStatus(data.status, cssClass);
+  document.getElementById("fullNameMsg").innerHTML = data.fullName ? "Name: <b>"+data.fullName+"</b>":"";
+  document.getElementById("attendeeMsg").innerHTML = data.attendeeNames ? "Attendees: <b>"+data.attendeeNames+"</b>":"";
+}
+
+function showStatus(msg,type){ 
+  const el = document.getElementById("statusMsg"); 
+  el.className=type; 
+  el.innerHTML=msg;
 }
 
 /* -------------------------
-   DISPLAY RESULT
+   DASHBOARD
 --------------------------*/
-function handleResponse(data) {
-    document.getElementById("resultBox").style.display = "block";
-
-    if (data.status === "AUTH_FAILED") {
-        showStatus("Incorrect password", "error");
-        return;
-    }
-
-    if (data.status === "MISSING_ID") {
-        showStatus("Missing registration ID", "error");
-        return;
-    }
-
-    let cssClass =
-        data.status === "Updated successfully" ? "success" :
-        data.status === "Already updated" ? "warning" : "error";
-
-    showStatus(data.status, cssClass);
-
-    document.getElementById("fullNameMsg").innerHTML =
-        data.fullName ? "Name: <b>" + data.fullName + "</b>" : "";
-
-    document.getElementById("attendeeMsg").innerHTML =
-        data.attendeeNames ? "Attendees: <b>" + data.attendeeNames + "</b>" : "";
-}
-
-function showStatus(msg, type) {
-    document.getElementById("resultBox").style.display = "block";
-
-    let el = document.getElementById("statusMsg");
-    el.className = type;
-    el.innerHTML = msg;
+function loadDashboard(){
+  const tbody = document.getElementById("dashboardBody");
+  tbody.innerHTML=""; // clear
+  fetch(`${WEB_APP_URL}?mode=dashboard`)
+    .then(res=>res.json())
+    .then(data=>{
+      for(const event in data){
+        const row = document.createElement("tr");
+        row.innerHTML=`<td>${event}</td><td>${data[event].total}</td><td>${data[event].ok}</td>`;
+        tbody.appendChild(row);
+      }
+    })
+    .catch(()=>alert("Failed to load dashboard"));
 }
 </script>
 
