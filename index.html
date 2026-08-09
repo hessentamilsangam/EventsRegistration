@@ -13,7 +13,7 @@ header { background: #007bff; color: white; padding: 15px; text-align:center; fo
 nav { display:flex; justify-content:center; background:#eee; }
 nav button { margin:5px; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; background:#007bff; color:white; }
 nav button.active { background:#0056b3; }
-section { display:none; padding:20px; max-width:500px; margin:auto; background:white; border-radius:10px; margin-top:20px;}
+section { display:none; padding:20px; max-width:700px; margin:auto; background:white; border-radius:10px; margin-top:20px;}
 input, button { width:100%; padding:10px; margin-top:10px; font-size:16px; border-radius:6px; }
 button:hover { opacity:0.9; }
 #qr-reader { margin-top:15px; display:none;}
@@ -54,12 +54,18 @@ th { background:#007bff; color:white;}
   <table id="dashboardTable">
     <thead>
       <tr>
-        <th>Event Title</th>
-        <th>Total Registrations</th>
-        <th>Status OK</th>
+        <th>Event Member Type</th>
+        <th>Total Adults</th>
+        <th>Total Kids</th>
+        <th>Food – Veg</th>
+        <th>Food – Non-Veg</th>
+        <th>Attend Status</th>
+        <th>Payment Status</th>
       </tr>
     </thead>
-    <tbody id="dashboardBody"></tbody>
+    <tbody id="dashboardBody">
+      <!-- Exactly 3 rows will be rendered here: Member, Non-member, Total -->
+    </tbody>
   </table>
 </section>
 
@@ -149,19 +155,135 @@ function showStatus(msg,type){
 /* -------------------------
    DASHBOARD
 --------------------------*/
+function safeNum(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.round(n) : 0;
+}
+
 function loadDashboard(){
   const tbody = document.getElementById("dashboardBody");
   tbody.innerHTML=""; // clear
+
+  // Initialize aggregates for members and non-members
+  const memberTotals = { adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
+  const nonMemberTotals = { adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
+
   fetch(`${WEB_APP_URL}?mode=dashboard`)
     .then(res=>res.json())
     .then(data=>{
-      for(const event in data){
-        const row = document.createElement("tr");
-        row.innerHTML=`<td>${event}</td><td>${data[event].total}</td><td>${data[event].ok}</td>`;
-        tbody.appendChild(row);
+      // Data is expected to be an object keyed by event name. Each value may contain structured
+      // member/non-member breakdowns. We try to be flexible about field names so front-end
+      // will gracefully aggregate if the backend provides the expected counts.
+      for(const eventName in data){
+        const ev = data[eventName];
+
+        // Preferred shape: ev.members and ev.nonMembers objects
+        if(ev && ev.members && ev.nonMembers){
+          memberTotals.adults += safeNum(ev.members.totalAdults || ev.members.adults || ev.members.adultCount);
+          memberTotals.kids += safeNum(ev.members.totalKids || ev.members.kids || ev.members.kidCount);
+          memberTotals.veg += safeNum(ev.members.foodVeg || ev.members.veg || ev.members.vegCount);
+          memberTotals.nonveg += safeNum(ev.members.foodNonVeg || ev.members.nonVeg || ev.members.nonVegCount);
+          memberTotals.attend += safeNum(ev.members.attended || ev.members.attend || ev.members.attendCount);
+          memberTotals.paid += safeNum(ev.members.paid || ev.members.paymentOk || ev.members.paidCount);
+
+          nonMemberTotals.adults += safeNum(ev.nonMembers.totalAdults || ev.nonMembers.adults || ev.nonMembers.adultCount);
+          nonMemberTotals.kids += safeNum(ev.nonMembers.totalKids || ev.nonMembers.kids || ev.nonMembers.kidCount);
+          nonMemberTotals.veg += safeNum(ev.nonMembers.foodVeg || ev.nonMembers.veg || ev.nonMembers.vegCount);
+          nonMemberTotals.nonveg += safeNum(ev.nonMembers.foodNonVeg || ev.nonMembers.nonVeg || ev.nonMembers.nonVegCount);
+          nonMemberTotals.attend += safeNum(ev.nonMembers.attended || ev.nonMembers.attend || ev.nonMembers.attendCount);
+          nonMemberTotals.paid += safeNum(ev.nonMembers.paid || ev.nonMembers.paymentOk || ev.nonMembers.paidCount);
+
+          continue;
+        }
+
+        // Alternate shape: ev.member and ev.nonMember
+        if(ev && (ev.member || ev.nonMember)){
+          const m = ev.member || {};
+          const nm = ev.nonMember || {};
+          memberTotals.adults += safeNum(m.totalAdults || m.adults || m.adultCount);
+          memberTotals.kids += safeNum(m.totalKids || m.kids || m.kidCount);
+          memberTotals.veg += safeNum(m.foodVeg || m.veg || m.vegCount);
+          memberTotals.nonveg += safeNum(m.foodNonVeg || m.nonVeg || m.nonVegCount);
+          memberTotals.attend += safeNum(m.attended || m.attend || m.attendCount);
+          memberTotals.paid += safeNum(m.paid || m.paymentOk || m.paidCount);
+
+          nonMemberTotals.adults += safeNum(nm.totalAdults || nm.adults || nm.adultCount);
+          nonMemberTotals.kids += safeNum(nm.totalKids || nm.kids || nm.kidCount);
+          nonMemberTotals.veg += safeNum(nm.foodVeg || nm.veg || nm.vegCount);
+          nonMemberTotals.nonveg += safeNum(nm.foodNonVeg || nm.nonVeg || nm.nonVegCount);
+          nonMemberTotals.attend += safeNum(nm.attended || nm.attend || nm.attendCount);
+          nonMemberTotals.paid += safeNum(nm.paid || nm.paymentOk || nm.paidCount);
+
+          continue;
+        }
+
+        // Fallback: if backend returns simple totals per event like { total: X, ok: Y }
+        if(ev && (ev.total !== undefined || ev.ok !== undefined)){
+          // Put total into adults column as fallback, and ok into Attend Status
+          memberTotals.adults += 0; // unknown
+          nonMemberTotals.adults += safeNum(ev.total);
+          nonMemberTotals.attend += safeNum(ev.ok);
+          continue;
+        }
+
+        // If the backend returns an array of registrations for the event, try to infer by scanning
+        if(Array.isArray(ev)){
+          ev.forEach(r => {
+            const isMember = (r.isMember||'').toString().toLowerCase() === 'yes';
+            const target = isMember ? memberTotals : nonMemberTotals;
+            target.adults += safeNum(r.adults || r.adult || r.adultCount || 0);
+            target.kids += safeNum(r.kids || r.child || r.childCount || 0);
+            // food: try common keys or fallback by checking r.food
+            if(r.food){
+              const f = r.food.toString().toLowerCase();
+              if(f.includes('veg')) target.veg += 1; else if(f.includes('non')) target.nonveg += 1;
+            }
+            if(r.attended || r.attend || r.isPresent) target.attend += (r.attended||r.attend||r.isPresent)?1:0;
+            if(r.paid || r.paymentStatus || r.isPaid) target.paid += (r.paid||r.isPaid|| (r.paymentStatus==="Paid"))?1:0;
+          });
+          continue;
+        }
+
+        // Unknown shape: skip it
       }
+
+      // Compute totals (sum of member + non-member)
+      const total = {
+        adults: memberTotals.adults + nonMemberTotals.adults,
+        kids: memberTotals.kids + nonMemberTotals.kids,
+        veg: memberTotals.veg + nonMemberTotals.veg,
+        nonveg: memberTotals.nonveg + nonMemberTotals.nonveg,
+        attend: memberTotals.attend + nonMemberTotals.attend,
+        paid: memberTotals.paid + nonMemberTotals.paid
+      };
+
+      function rowHtml(label, t){
+        return `<tr>`+
+               `<td>${label}</td>`+
+               `<td>${t.adults}</td>`+
+               `<td>${t.kids}</td>`+
+               `<td>${t.veg}</td>`+
+               `<td>${t.nonveg}</td>`+
+               `<td>${t.attend}</td>`+
+               `<td>${t.paid}</td>`+
+               `</tr>`;
+      }
+
+      // Render exactly 3 rows
+      tbody.innerHTML += rowHtml('Member', memberTotals);
+      tbody.innerHTML += rowHtml('Non-member', nonMemberTotals);
+      tbody.innerHTML += rowHtml('Total', total);
+
     })
-    .catch(()=>alert("Failed to load dashboard"));
+    .catch(()=>{
+      // If fetch fails, still render three empty rows to respect the requirement
+      const empty = { adults:0,kids:0,veg:0,nonveg:0,attend:0,paid:0 };
+      tbody.innerHTML += `<tr><td>Member</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
+      tbody.innerHTML += `<tr><td>Non-member</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
+      tbody.innerHTML += `<tr><td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
+      // Also notify user
+      alert("Failed to load dashboard");
+    });
 }
 </script>
 
