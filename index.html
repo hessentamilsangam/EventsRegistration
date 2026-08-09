@@ -171,80 +171,77 @@ function loadDashboard(){
   fetch(`${WEB_APP_URL}?mode=dashboard`)
     .then(res=>res.json())
     .then(data=>{
-      // Data is expected to be an object keyed by event name. Each value may contain structured
-      // member/non-member breakdowns. We try to be flexible about field names so front-end
-      // will gracefully aggregate if the backend provides the expected counts.
-      for(const eventName in data){
-        const ev = data[eventName];
-
-        // Preferred shape: ev.members and ev.nonMembers objects
-        if(ev && ev.members && ev.nonMembers){
-          memberTotals.adults += safeNum(ev.members.totalAdults || ev.members.adults || ev.members.adultCount);
-          memberTotals.kids += safeNum(ev.members.totalKids || ev.members.kids || ev.members.kidCount);
-          memberTotals.veg += safeNum(ev.members.foodVeg || ev.members.veg || ev.members.vegCount);
-          memberTotals.nonveg += safeNum(ev.members.foodNonVeg || ev.members.nonVeg || ev.members.nonVegCount);
-          memberTotals.attend += safeNum(ev.members.attended || ev.members.attend || ev.members.attendCount);
-          memberTotals.paid += safeNum(ev.members.paid || ev.members.paymentOk || ev.members.paidCount);
-
-          nonMemberTotals.adults += safeNum(ev.nonMembers.totalAdults || ev.nonMembers.adults || ev.nonMembers.adultCount);
-          nonMemberTotals.kids += safeNum(ev.nonMembers.totalKids || ev.nonMembers.kids || ev.nonMembers.kidCount);
-          nonMemberTotals.veg += safeNum(ev.nonMembers.foodVeg || ev.nonMembers.veg || ev.nonMembers.vegCount);
-          nonMemberTotals.nonveg += safeNum(ev.nonMembers.foodNonVeg || ev.nonMembers.nonVeg || ev.nonMembers.nonVegCount);
-          nonMemberTotals.attend += safeNum(ev.nonMembers.attended || ev.nonMembers.attend || ev.nonMembers.attendCount);
-          nonMemberTotals.paid += safeNum(ev.nonMembers.paid || ev.nonMembers.paymentOk || ev.nonMembers.paidCount);
-
-          continue;
-        }
-
-        // Alternate shape: ev.member and ev.nonMember
-        if(ev && (ev.member || ev.nonMember)){
-          const m = ev.member || {};
-          const nm = ev.nonMember || {};
-          memberTotals.adults += safeNum(m.totalAdults || m.adults || m.adultCount);
-          memberTotals.kids += safeNum(m.totalKids || m.kids || m.kidCount);
-          memberTotals.veg += safeNum(m.foodVeg || m.veg || m.vegCount);
-          memberTotals.nonveg += safeNum(m.foodNonVeg || m.nonVeg || m.nonVegCount);
-          memberTotals.attend += safeNum(m.attended || m.attend || m.attendCount);
-          memberTotals.paid += safeNum(m.paid || m.paymentOk || m.paidCount);
-
-          nonMemberTotals.adults += safeNum(nm.totalAdults || nm.adults || nm.adultCount);
-          nonMemberTotals.kids += safeNum(nm.totalKids || nm.kids || nm.kidCount);
-          nonMemberTotals.veg += safeNum(nm.foodVeg || nm.veg || nm.vegCount);
-          nonMemberTotals.nonveg += safeNum(nm.foodNonVeg || nm.nonVeg || nm.nonVegCount);
-          nonMemberTotals.attend += safeNum(nm.attended || nm.attend || nm.attendCount);
-          nonMemberTotals.paid += safeNum(nm.paid || nm.paymentOk || nm.paidCount);
-
-          continue;
-        }
-
-        // Fallback: if backend returns simple totals per event like { total: X, ok: Y }
-        if(ev && (ev.total !== undefined || ev.ok !== undefined)){
-          // Put total into adults column as fallback, and ok into Attend Status
-          memberTotals.adults += 0; // unknown
-          nonMemberTotals.adults += safeNum(ev.total);
-          nonMemberTotals.attend += safeNum(ev.ok);
-          continue;
-        }
-
-        // If the backend returns an array of registrations for the event, try to infer by scanning
-        if(Array.isArray(ev)){
-          ev.forEach(r => {
-            const isMember = (r.isMember||'').toString().toLowerCase() === 'yes';
-            const target = isMember ? memberTotals : nonMemberTotals;
-            target.adults += safeNum(r.adults || r.adult || r.adultCount || 0);
-            target.kids += safeNum(r.kids || r.child || r.childCount || 0);
-            // food: try common keys or fallback by checking r.food
-            if(r.food){
-              const f = r.food.toString().toLowerCase();
-              if(f.includes('veg')) target.veg += 1; else if(f.includes('non')) target.nonveg += 1;
+      // Data is expected to be an array of registrations
+      // Each registration has: isMember, foodPreference, adults, kids, attendStatus, paymentStatus
+      
+      if(Array.isArray(data)){
+        data.forEach(record => {
+          // Determine if member or non-member
+          const isMember = (record.isMember || '').toString().toLowerCase() === 'yes';
+          const target = isMember ? memberTotals : nonMemberTotals;
+          
+          // Count adults
+          target.adults += safeNum(record.adults || 0);
+          
+          // Count kids (only if present, not "none")
+          if(record.kids && record.kids.toString().toLowerCase() !== 'none'){
+            target.kids += safeNum(record.kids);
+          }
+          
+          // Count food preference
+          if(record.foodPreference){
+            const food = record.foodPreference.toString().toLowerCase();
+            if(food.includes('veg')){
+              target.veg += 1;
+            } else if(food.includes('non')){
+              target.nonveg += 1;
             }
-            if(r.attended || r.attend || r.isPresent) target.attend += (r.attended||r.attend||r.isPresent)?1:0;
-            if(r.paid || r.paymentStatus || r.isPaid) target.paid += (r.paid||r.isPaid|| (r.paymentStatus==="Paid"))?1:0;
-          });
-          continue;
+          }
+          
+          // Count attend status (ok = attended)
+          if(record.attendStatus === 'ok'){
+            target.attend += 1;
+          }
+          
+          // Count payment status (ok = paid)
+          if(record.paymentStatus === 'ok'){
+            target.paid += 1;
+          }
+        });
+      } else {
+        // If data is an object keyed by event names, handle that structure
+        for(const eventName in data){
+          const eventRecords = data[eventName];
+          if(Array.isArray(eventRecords)){
+            eventRecords.forEach(record => {
+              const isMember = (record.isMember || '').toString().toLowerCase() === 'yes';
+              const target = isMember ? memberTotals : nonMemberTotals;
+              
+              target.adults += safeNum(record.adults || 0);
+              
+              if(record.kids && record.kids.toString().toLowerCase() !== 'none'){
+                target.kids += safeNum(record.kids);
+              }
+              
+              if(record.foodPreference){
+                const food = record.foodPreference.toString().toLowerCase();
+                if(food.includes('veg')){
+                  target.veg += 1;
+                } else if(food.includes('non')){
+                  target.nonveg += 1;
+                }
+              }
+              
+              if(record.attendStatus === 'ok'){
+                target.attend += 1;
+              }
+              
+              if(record.paymentStatus === 'ok'){
+                target.paid += 1;
+              }
+            });
+          }
         }
-
-        // Unknown shape: skip it
       }
 
       // Compute totals (sum of member + non-member)
@@ -277,7 +274,6 @@ function loadDashboard(){
     })
     .catch(()=>{
       // If fetch fails, still render three empty rows to respect the requirement
-      const empty = { adults:0,kids:0,veg:0,nonveg:0,attend:0,paid:0 };
       tbody.innerHTML += `<tr><td>Member</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
       tbody.innerHTML += `<tr><td>Non-member</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
       tbody.innerHTML += `<tr><td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
