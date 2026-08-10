@@ -41,11 +41,15 @@ th { background:#007bff; color:white;}
   <input id="regIdInput" placeholder="Registration ID (or scanned value)">
   <input id="emailInput" placeholder="Email (optional)">
   <button id="submitBtn" onclick="submitId()">Submit</button>
+  <button id="resetBtn" type="button" onclick="resetForm()" style="background:#6c757d;">🔄 Reset</button>
 
   <div id="resultBox">
     <div id="statusMsg"></div>
+    <div id="regIdMsg"></div>
+    <div id="emailMsg"></div>
     <div id="fullNameMsg"></div>
     <div id="attendeeMsg"></div>
+    <div id="paymentMsg"></div>
   </div>
 </section>
 
