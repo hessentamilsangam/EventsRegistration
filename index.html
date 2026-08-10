@@ -2,129 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Registration System</title>
-
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f2f2f2;
-  margin: 0;
-  padding: 0;
-}
-
-header {
-  background: #007bff;
-  color: white;
-  padding: 15px;
-  text-align: center;
-  font-size: 1.2em;
-}
-
-nav {
-  display: flex;
-  justify-content: center;
-  background: #eee;
-}
-
-nav button {
-  margin: 5px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  background: #007bff;
-  color: white;
-}
-
-nav button.active {
-  background: #0056b3;
-}
-
-section {
-  display: none;
-  padding: 20px;
-  max-width: 700px;
-  margin: auto;
-  background: white;
-  border-radius: 10px;
-  margin-top: 20px;
-}
-
-input,
-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  font-size: 16px;
-  border-radius: 6px;
-  box-sizing: border-box;
-}
-
-button {
-  border: none;
-  cursor: pointer;
-  background: #007bff;
-  color: white;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-#qr-reader {
-  margin-top: 15px;
-  display: none;
-}
-
-#resultBox,
-#dashboardTable {
-  margin-top: 15px;
-}
-
-#resultBox {
-  padding: 15px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  display: none;
-}
-
-.success {
-  color: green;
-}
-
-.warning {
-  color: orange;
-}
-
-.error {
-  color: red;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th,
-td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
-}
-
-th {
-  background: #007bff;
-  color: white;
-}
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f2f2f2;margin:0}
+header{background:#007bff;color:#fff;padding:15px;text-align:center;font-size:1.2em}
+nav{display:flex;justify-content:center;background:#eee}
+nav button{margin:5px;padding:10px 20px;border:0;border-radius:5px;cursor:pointer;background:#007bff;color:#fff}
+nav button.active{background:#0056b3}
+section{display:none;padding:20px;max-width:700px;margin:20px auto;background:#fff;border-radius:10px}
+input,button{width:100%;padding:10px;margin-top:10px;font-size:16px;border-radius:6px}
+button{border:0;cursor:pointer;background:#007bff;color:#fff}
+button:hover{opacity:.9}
+button:disabled{opacity:.6;cursor:not-allowed}
+#qr-reader{margin-top:15px;display:none}
+#resultBox{margin-top:15px;padding:15px;background:#f9f9f9;border-radius:8px;display:none}
+#dashboardTable{width:100%;border-collapse:collapse;margin-top:15px}
+th,td{border:1px solid #ccc;padding:8px;text-align:center}
+th{background:#007bff;color:#fff}
+.success{color:green}.warning{color:#d88900}.error{color:red}
+#updatePaymentBtn{display:none;background:#28a745}
+#paymentUpdateMsg{margin-top:10px}
 </style>
 </head>
 
@@ -133,1640 +34,313 @@ th {
 <header>Registration System</header>
 
 <nav>
-  <button
-    class="tabBtn active"
-    onclick="showSection('scanSection', this)">
-    Scan / Verify
-  </button>
-
-  <button
-    class="tabBtn"
-    onclick="showSection('dashboardSection', this)">
-    Dashboard
-  </button>
+  <button class="tabBtn active" onclick="showSection('scanSection',this)">Scan / Verify</button>
+  <button class="tabBtn" onclick="showSection('dashboardSection',this)">Dashboard</button>
 </nav>
 
-<!-- =========================
-     SCAN / VERIFY SECTION
-========================= -->
-
-<section id="scanSection" style="display:block;">
-
-  <input
-    type="password"
-    id="passwordInput"
-    placeholder="Enter password">
-
-  <button
-    id="scanBtn"
-    onclick="startScanning()">
-    📷 Scan QR Code
-  </button>
-
+<!-- SCAN / VERIFY -->
+<section id="scanSection" style="display:block">
+  <input type="password" id="passwordInput" placeholder="Enter password">
+  <button id="scanBtn" onclick="startScanning()">📷 Scan QR Code</button>
   <div id="qr-reader"></div>
 
-  <input
-    id="regIdInput"
-    placeholder="Registration ID (or scanned value)">
+  <input id="regIdInput" placeholder="Registration ID (or scanned value)">
+  <input id="emailInput" placeholder="Email (optional)">
 
-  <input
-    id="emailInput"
-    placeholder="Email (optional)">
-
-  <button
-    id="submitBtn"
-    onclick="submitId()">
-    Submit
-  </button>
-
-  <button
-    id="resetBtn"
-    type="button"
-    onclick="resetForm()"
-    style="background:#6c757d;">
-    🔄 Reset
-  </button>
-
-  <!-- RESULT AREA -->
+  <button id="submitBtn" onclick="submitId()">Submit</button>
+  <button id="resetBtn" type="button" onclick="resetForm()" style="background:#6c757d">🔄 Reset</button>
 
   <div id="resultBox">
-
     <div id="statusMsg"></div>
-
     <div id="regIdMsg"></div>
-
     <div id="emailMsg"></div>
-
     <div id="fullNameMsg"></div>
-
     <div id="attendeeMsg"></div>
-
     <div id="paymentMsg"></div>
 
+    <button id="updatePaymentBtn" type="button" onclick="updatePayment()">💳 Update Payment</button>
+    <div id="paymentUpdateMsg"></div>
   </div>
-
 </section>
 
-
-<!-- =========================
-     DASHBOARD SECTION
-========================= -->
-
+<!-- DASHBOARD -->
 <section id="dashboardSection">
-
-  <h3 style="text-align:center;">
-    Event Dashboard
-  </h3>
-
+  <h3 style="text-align:center">Event Dashboard</h3>
   <table id="dashboardTable">
-
     <thead>
       <tr>
-        <th>Member Type</th>
-        <th>Registrations</th>
-        <th>Adults</th>
-        <th>Kids</th>
-        <th>Veg</th>
-        <th>NonVeg</th>
-        <th>Attend</th>
-        <th>Payment</th>
+        <th>Member Type</th><th>Registrations</th><th>Adults</th><th>Kids</th>
+        <th>Veg</th><th>NonVeg</th><th>Attend</th><th>Payment</th>
       </tr>
     </thead>
-
-    <tbody id="dashboardBody">
-      <!-- Rows generated by JavaScript -->
-    </tbody>
-
+    <tbody id="dashboardBody"></tbody>
   </table>
-
 </section>
 
-
 <script>
+const WEB_APP_URL="https://script.google.com/macros/s/AKfycbz2XU2Ij-GpCZU00gcG1a8OhJtOEYt7L0AKz6oF8F6oGNHuwy63OO2fLL5WBDFSR6M/exec";
+let scanner=null,scanning=false,verifyController=null;
 
-/* =========================================================
-   GOOGLE APPS SCRIPT WEB APP URL
-========================================================= */
-
-const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbz2XU2Ij-GpCZU00gcG1a8OhJtOEYt7L0AKz6oF8F6oGNHuwy63OO2fLL5WBDFSR6M/exec";
-
-
-/* =========================================================
-   GLOBAL VARIABLES
-========================================================= */
-
-let scanner = null;
-let scanning = false;
-let verifyController = null;
-
-
-/* =========================================================
-   TAB SWITCHING
-========================================================= */
-
-function showSection(id, btn) {
-
-  document.querySelectorAll("section").forEach(section => {
-    section.style.display = "none";
-  });
-
-  document.getElementById(id).style.display = "block";
-
-  document.querySelectorAll(".tabBtn").forEach(button => {
-    button.classList.remove("active");
-  });
-
+/* TABS */
+function showSection(id,btn){
+  document.querySelectorAll("section").forEach(s=>s.style.display="none");
+  document.getElementById(id).style.display="block";
+  document.querySelectorAll(".tabBtn").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
-
-  if (id === "dashboardSection") {
-    loadDashboard();
-  }
+  if(id==="dashboardSection")loadDashboard();
 }
 
+/* QR SCANNER */
+function startScanning(){
+  const btn=document.getElementById("scanBtn"),qr=document.getElementById("qr-reader");
+  if(scanning){stopScanning();return}
+  qr.style.display="block";btn.disabled=true;btn.innerText="Starting camera...";
 
-/* =========================================================
-   QR SCANNING
-========================================================= */
+  try{scanner=new Html5Qrcode("qr-reader")}
+  catch(e){qr.style.display="none";btn.disabled=false;btn.innerText="📷 Scan QR Code";showResult("Unable to initialize QR scanner.","error");return}
 
-function startScanning() {
+  Html5Qrcode.getCameras().then(devices=>{
+    if(!devices.length)throw new Error("No camera found");
+    const cam=devices.find(d=>(d.label||"").toLowerCase().includes("back"))||devices[0];
+    scanning=true;btn.disabled=false;btn.innerText="⏹ Stop Scanning";
 
-  const scanBtn = document.getElementById("scanBtn");
-  const qrDiv = document.getElementById("qr-reader");
-
-  /*
-   * If scanner is already running,
-   * pressing the button stops it.
-   */
-  if (scanning) {
-    stopScanning();
-    return;
-  }
-
-  qrDiv.style.display = "block";
-
-  scanBtn.disabled = true;
-  scanBtn.innerText = "Starting camera...";
-
-  /*
-   * Create scanner
-   */
-  try {
-    scanner = new Html5Qrcode("qr-reader");
-  } catch (error) {
-
-    console.error("Scanner initialization error:", error);
-
-    showStatus(
-      "Unable to initialize QR scanner.",
-      "error"
-    );
-
-    qrDiv.style.display = "none";
-    scanBtn.disabled = false;
-    scanBtn.innerText = "📷 Scan QR Code";
-
-    return;
-  }
-
-
-  /*
-   * Get available cameras
-   */
-  Html5Qrcode.getCameras()
-
-    .then(devices => {
-
-      if (!devices || devices.length === 0) {
-        throw new Error("No camera found.");
-      }
-
-      /*
-       * Try to find rear/back camera.
-       */
-      let backCam =
-        devices.find(device =>
-          (device.label || "")
-            .toLowerCase()
-            .includes("back")
-        );
-
-      /*
-       * If no back camera,
-       * use first available camera.
-       */
-      if (!backCam) {
-        backCam = devices[0];
-      }
-
-      scanning = true;
-
-      scanBtn.disabled = false;
-      scanBtn.innerText = "⏹ Stop Scanning";
-
-
-      /*
-       * Start scanner
-       */
-      return scanner.start(
-
-        backCam.id,
-
-        {
-          fps: 10,
-          qrbox: 250
-        },
-
-        qrText => {
-
-          console.log("QR scanned:", qrText);
-
-          /*
-           * If QR value looks like email,
-           * put it into email field.
-           *
-           * Otherwise put it into
-           * registration ID field.
-           */
-          if (
-            typeof qrText === "string" &&
-            qrText.includes("@")
-          ) {
-
-            document.getElementById(
-              "emailInput"
-            ).value = qrText;
-
-          } else {
-
-            document.getElementById(
-              "regIdInput"
-            ).value = qrText;
-
-          }
-
-          /*
-           * Automatically stop scanner
-           * after successful scan.
-           */
-          stopScanning();
-
-        },
-
-        errorMessage => {
-          /*
-           * Scanner continuously reports
-           * "QR code not found" messages.
-           *
-           * We intentionally don't display
-           * those messages to the user.
-           */
-        }
-
-      );
-
-    })
-
-    .catch(error => {
-
-      console.error("Camera error:", error);
-
-      scanning = false;
-
-      qrDiv.style.display = "none";
-
-      scanBtn.disabled = false;
-
-      scanBtn.innerText = "📷 Scan QR Code";
-
-      showStatus(
-        "Camera not accessible. Please allow camera permission.",
-        "error"
-      );
-
-      document.getElementById(
-        "resultBox"
-      ).style.display = "block";
-
+    return scanner.start(cam.id,{fps:10,qrbox:250},text=>{
+      if(typeof text==="string"&&text.includes("@"))
+        document.getElementById("emailInput").value=text;
+      else
+        document.getElementById("regIdInput").value=text;
+      stopScanning();
     });
-
+  }).catch(e=>{
+    console.error(e);scanning=false;qr.style.display="none";btn.disabled=false;
+    btn.innerText="📷 Scan QR Code";
+    showResult("Camera not accessible. Please allow camera permission.","error");
+  });
 }
 
-
-/* =========================================================
-   STOP QR SCANNER
-========================================================= */
-
-function stopScanning() {
-
-  const scanBtn =
-    document.getElementById("scanBtn");
-
-  const qrReader =
-    document.getElementById("qr-reader");
-
-
-  /*
-   * If scanner exists and is running,
-   * stop it.
-   */
-  if (scanner && scanning) {
-
-    scanner.stop()
-
-      .then(() => {
-
-        console.log("QR scanner stopped.");
-
-      })
-
-      .catch(error => {
-
-        console.warn(
-          "Scanner stop warning:",
-          error
-        );
-
-      })
-
-      .finally(() => {
-
-        scanning = false;
-        scanner = null;
-
-        qrReader.style.display = "none";
-
-        scanBtn.disabled = false;
-
-        scanBtn.innerText =
-          "📷 Scan QR Code";
-
-      });
-
-  } else {
-
-    /*
-     * Make sure UI is reset even when
-     * scanner isn't actually running.
-     */
-
-    scanning = false;
-    scanner = null;
-
-    qrReader.style.display = "none";
-
-    scanBtn.disabled = false;
-
-    scanBtn.innerText =
-      "📷 Scan QR Code";
-  }
-}
-
-
-/* =========================================================
-   RESET EVERYTHING
-========================================================= */
-
-function resetForm() {
-
-  console.log("Reset requested.");
-
-
-  /*
-   * Cancel an active verification request.
-   *
-   * This is important because otherwise an old
-   * server response could arrive after Reset
-   * and put the old result back on screen.
-   */
-
-  if (verifyController) {
-
-    verifyController.abort();
-
-    verifyController = null;
-  }
-
-
-  /*
-   * Stop scanner.
-   */
-
-  if (scanner && scanning) {
-
-    scanner.stop()
-
-      .catch(error => {
-
-        console.warn(
-          "Scanner stop during reset:",
-          error
-        );
-
-      })
-
-      .finally(() => {
-
-        scanner = null;
-        scanning = false;
-
-        finishReset();
-
-      });
-
-  } else {
-
-    finishReset();
-
-  }
-
-}
-
-
-/* =========================================================
-   COMPLETE RESET UI
-========================================================= */
-
-function finishReset() {
-
-  /*
-   * Clear all input fields
-   */
-  document.getElementById(
-    "regIdInput"
-  ).value = "";
-
-  document.getElementById(
-    "emailInput"
-  ).value = "";
-
-
-  /*
-   * Hide QR reader
-   */
-
-  const qrReader =
-    document.getElementById("qr-reader");
-
-  qrReader.style.display = "none";
-
-
-  /*
-   * Restore Scan button
-   */
-
-  const scanBtn =
-    document.getElementById("scanBtn");
-
-  scanBtn.disabled = false;
-
-  scanBtn.innerText =
-    "📷 Scan QR Code";
-
-
-  /*
-   * Restore Submit button
-   */
-
-  const submitBtn =
-    document.getElementById("submitBtn");
-
-  submitBtn.disabled = false;
-
-  submitBtn.innerText = "Submit";
-
-  delete submitBtn.dataset.origText;
-
-
-  /*
-   * Clear all result messages
-   */
-
-  document.getElementById(
-    "statusMsg"
-  ).innerHTML = "";
-
-  document.getElementById(
-    "regIdMsg"
-  ).innerHTML = "";
-
-  document.getElementById(
-    "emailMsg"
-  ).innerHTML = "";
-
-  document.getElementById(
-    "fullNameMsg"
-  ).innerHTML = "";
-
-  document.getElementById(
-    "attendeeMsg"
-  ).innerHTML = "";
-
-  document.getElementById(
-    "paymentMsg"
-  ).innerHTML = "";
-
-
-  /*
-   * Remove status color
-   */
-
-  document.getElementById(
-    "statusMsg"
-  ).className = "";
-
-
-  /*
-   * Hide result box
-   */
-
-  document.getElementById(
-    "resultBox"
-  ).style.display = "none";
-
-
-  /*
-   * Reset scanner variables
-   */
-
-  scanning = false;
-  scanner = null;
-
-
-  console.log("Form completely reset.");
-}
-
-
-/* =========================================================
-   SUBMIT REGISTRATION ID / EMAIL
-========================================================= */
-
-function submitId() {
-
-  const regId =
-    document.getElementById(
-      "regIdInput"
-    ).value.trim();
-
-  const email =
-    document.getElementById(
-      "emailInput"
-    ).value.trim();
-
-  const pass =
-    document.getElementById(
-      "passwordInput"
-    ).value.trim();
-
-
-  /*
-   * Password validation
-   */
-
-  if (!pass) {
-
-    showStatus(
-      "Enter password",
-      "error"
-    );
-
-    document.getElementById(
-      "resultBox"
-    ).style.display = "block";
-
-    return;
-  }
-
-
-  /*
-   * Registration ID / Email validation
-   */
-
-  if (!regId && !email) {
-
-    showStatus(
-      "Enter Registration ID or Email",
-      "error"
-    );
-
-    document.getElementById(
-      "resultBox"
-    ).style.display = "block";
-
-    return;
-  }
-
-
-  /*
-   * Cancel previous request if one exists.
-   */
-
-  if (verifyController) {
-    verifyController.abort();
-  }
-
-  verifyController =
-    new AbortController();
-
-
-  /*
-   * Build request parameters
-   */
-
-  const params =
-    new URLSearchParams();
-
-  params.append(
-    "mode",
-    "verify"
-  );
-
-  params.append(
-    "password",
-    pass
-  );
-
-
-  if (regId) {
-
-    params.append(
-      "registrationId",
-      regId
-    );
-
-  } else {
-
-    params.append(
-      "email",
-      email
-    );
-  }
-
-
-  /*
-   * Loading state
-   */
-
-  setLoading(true);
-
-  showStatus(
-    "Verifying...",
-    ""
-  );
-
-  document.getElementById(
-    "resultBox"
-  ).style.display = "block";
-
-
-  /*
-   * Send request
-   */
-
-  fetch(
-    `${WEB_APP_URL}?${params.toString()}`,
-    {
-      signal: verifyController.signal
-    }
-  )
-
-    .then(response => {
-
-      if (!response.ok) {
-        throw new Error(
-          "HTTP error " +
-          response.status
-        );
-      }
-
-      return response.json();
-
-    })
-
-    .then(data => {
-
-      handleResponse(data);
-
-    })
-
-    .catch(error => {
-
-      /*
-       * Ignore AbortError because Reset
-       * intentionally cancelled the request.
-       */
-
-      if (error.name === "AbortError") {
-        return;
-      }
-
-      console.error(
-        "Verification error:",
-        error
-      );
-
-      showStatus(
-        "Server error. Try again.",
-        "error"
-      );
-
-    })
-
-    .finally(() => {
-
-      setLoading(false);
-
-      verifyController = null;
-
+function stopScanning(){
+  const btn=document.getElementById("scanBtn"),qr=document.getElementById("qr-reader");
+  if(scanner&&scanning){
+    scanner.stop().catch(()=>{}).finally(()=>{
+      scanner=null;scanning=false;qr.style.display="none";
+      btn.disabled=false;btn.innerText="📷 Scan QR Code";
     });
-
-}
-
-
-/* =========================================================
-   HANDLE SERVER RESPONSE
-========================================================= */
-
-function handleResponse(data) {
-
-  document.getElementById(
-    "resultBox"
-  ).style.display = "block";
-
-
-  /*
-   * Authentication failed
-   */
-
-  if (data.status === "AUTH_FAILED") {
-
-    showStatus(
-      "Incorrect password",
-      "error"
-    );
-
-    return;
-  }
-
-
-  /*
-   * Missing registration ID
-   */
-
-  if (data.status === "MISSING_ID") {
-
-    showStatus(
-      "Missing registration ID",
-      "error"
-    );
-
-    return;
-  }
-
-
-  /*
-   * Determine status color
-   */
-
-  let cssClass =
-    data.status === "Updated successfully"
-      ? "success"
-      : data.status === "Already updated"
-        ? "warning"
-        : "error";
-
-
-  showStatus(
-    data.status || "Unknown response",
-    cssClass
-  );
-
-
-  /*
-   * Registration ID
-   */
-
-  document.getElementById(
-    "regIdMsg"
-  ).innerHTML =
-    data.registrationId
-      ? "Registration ID: <b>" +
-        escapeHtml(
-          data.registrationId
-        ) +
-        "</b>"
-      : "";
-
-
-  /*
-   * Email
-   */
-
-  document.getElementById(
-    "emailMsg"
-  ).innerHTML =
-    data.email
-      ? "Email: <b>" +
-        escapeHtml(
-          data.email
-        ) +
-        "</b>"
-      : "";
-
-
-  /*
-   * Full name
-   */
-
-  document.getElementById(
-    "fullNameMsg"
-  ).innerHTML =
-    data.fullName
-      ? "Name: <b>" +
-        escapeHtml(
-          data.fullName
-        ) +
-        "</b>"
-      : "";
-
-
-  /*
-   * Attendees
-   */
-
-  document.getElementById(
-    "attendeeMsg"
-  ).innerHTML =
-    data.attendeeNames
-      ? "Attendees: <b>" +
-        escapeHtml(
-          data.attendeeNames
-        ) +
-        "</b>"
-      : "";
-
-
-  /*
-   * Payment
-   */
-
-  document.getElementById(
-    "paymentMsg"
-  ).innerHTML =
-    data.paymentStatus
-      ? "Payment Status: <b>" +
-        escapeHtml(
-          data.paymentStatus
-        ) +
-        "</b>"
-      : "";
-}
-
-
-/* =========================================================
-   SHOW STATUS
-========================================================= */
-
-function showStatus(msg, type) {
-
-  const el =
-    document.getElementById(
-      "statusMsg"
-    );
-
-  el.className = type || "";
-
-  el.innerHTML = msg;
-}
-
-
-/* =========================================================
-   LOADING STATE
-========================================================= */
-
-function setLoading(isLoading) {
-
-  const submitBtn =
-    document.getElementById(
-      "submitBtn"
-    );
-
-  const scanBtn =
-    document.getElementById(
-      "scanBtn"
-    );
-
-
-  if (isLoading) {
-
-    /*
-     * Save original button text.
-     */
-
-    submitBtn.dataset.origText =
-      submitBtn.innerHTML;
-
-    submitBtn.innerHTML =
-      "Verifying...";
-
-    submitBtn.disabled = true;
-
-    scanBtn.disabled = true;
-
-  } else {
-
-    /*
-     * Restore Submit button.
-     */
-
-    submitBtn.innerHTML =
-      submitBtn.dataset.origText ||
-      "Submit";
-
-    submitBtn.disabled = false;
-
-    /*
-     * Do not enable Scan button if
-     * scanner is actually running.
-     */
-
-    scanBtn.disabled =
-      scanning;
+  }else{
+    scanner=null;scanning=false;qr.style.display="none";
+    btn.disabled=false;btn.innerText="📷 Scan QR Code";
   }
 }
 
+/* SUBMIT / VERIFY */
+function submitId(){
+  const reg=document.getElementById("regIdInput").value.trim();
+  const email=document.getElementById("emailInput").value.trim();
+  const pass=document.getElementById("passwordInput").value.trim();
 
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
+  if(!pass){showResult("Enter password","error");return}
+  if(!reg&&!email){showResult("Enter Registration ID or Email","error");return}
 
-function escapeHtml(unsafe) {
+  if(verifyController)verifyController.abort();
+  verifyController=new AbortController();
 
-  return String(unsafe)
+  const p=new URLSearchParams({mode:"verify",password:pass});
+  if(reg)p.append("registrationId",reg);else p.append("email",email);
 
-    .replace(
-      /&/g,
-      "&amp;"
-    )
+  setLoading(true);showResult("Verifying...","");
 
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
+  fetch(`${WEB_APP_URL}?${p}`,{signal:verifyController.signal})
+    .then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()})
+    .then(handleResponse)
+    .catch(e=>{if(e.name!=="AbortError")showResult("Server error. Try again.","error")})
+    .finally(()=>{setLoading(false);verifyController=null});
 }
 
+/* RESULT */
+function handleResponse(data){
+  const box=document.getElementById("resultBox"),btn=document.getElementById("updatePaymentBtn");
+  box.style.display="block";
+  btn.style.display="none";btn.disabled=false;btn.innerText="💳 Update Payment";
+  btn.dataset.registrationId="";
+  document.getElementById("paymentUpdateMsg").innerHTML="";
 
-/* =========================================================
-   DASHBOARD
-========================================================= */
+  if(data.status==="AUTH_FAILED"){showResult("Incorrect password","error");return}
+  if(data.status==="MISSING_ID"){showResult("Missing registration ID","error");return}
 
-function safeNum(v) {
+  const cls=data.status==="Updated successfully"?"success":data.status==="Already updated"?"warning":"error";
+  showResult(data.status||"Unknown response",cls);
 
-  const n = Number(v);
+  document.getElementById("regIdMsg").innerHTML=data.registrationId?"Registration ID: <b>"+escapeHtml(data.registrationId)+"</b>":"";
+  document.getElementById("emailMsg").innerHTML=data.email?"Email: <b>"+escapeHtml(data.email)+"</b>":"";
+  document.getElementById("fullNameMsg").innerHTML=data.fullName?"Name: <b>"+escapeHtml(data.fullName)+"</b>":"";
+  document.getElementById("attendeeMsg").innerHTML=data.attendeeNames?"Attendees: <b>"+escapeHtml(data.attendeeNames)+"</b>":"";
+  document.getElementById("paymentMsg").innerHTML=data.paymentStatus?"Payment Status: <b>"+escapeHtml(data.paymentStatus)+"</b>":"";
 
-  return Number.isFinite(n)
-    ? Math.round(n)
-    : 0;
+  if(data.registrationId){
+    btn.dataset.registrationId=String(data.registrationId).trim();
+    btn.style.display="block";
+  }
 }
 
+/* UPDATE PAYMENT */
+function updatePayment(){
+  const btn=document.getElementById("updatePaymentBtn");
+  const msg=document.getElementById("paymentUpdateMsg");
+  const reg=btn.dataset.registrationId;
+  const pass=document.getElementById("passwordInput").value.trim();
 
-/* =========================================================
-   EMPTY DASHBOARD ROW
-========================================================= */
+  if(!reg){msg.innerHTML='<span class="error">Registration ID is missing.</span>';return}
+  if(!pass){msg.innerHTML='<span class="error">Password is missing.</span>';return}
 
-function zeroRow() {
+  btn.disabled=true;btn.innerText="Updating Payment...";
+  msg.className="";msg.innerText="Updating payment...";
 
-  return {
-    registrations: 0,
-    adults: 0,
-    kids: 0,
-    veg: 0,
-    nonveg: 0,
-    attend: 0,
-    paid: 0
+  const p=new URLSearchParams({mode:"updatePayment",password:pass,registrationId:reg});
+
+  fetch(`${WEB_APP_URL}?${p}`)
+    .then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()})
+    .then(data=>{
+      if(data.status==="Payment updated successfully"){
+        msg.innerHTML='<span class="success">✅ Payment updated successfully.</span>';
+        document.getElementById("paymentMsg").innerHTML="Payment Status: <b>OK</b>";
+        btn.innerText="✅ Payment Updated";
+        btn.disabled=true;
+      }else if(data.status==="Payment already updated"){
+        msg.innerHTML='<span class="warning">Payment is already updated.</span>';
+        document.getElementById("paymentMsg").innerHTML="Payment Status: <b>OK</b>";
+        btn.innerText="✅ Already Updated";
+        btn.disabled=true;
+      }else{
+        msg.innerHTML='<span class="error">'+escapeHtml(data.message||data.status||"Payment update failed.")+'</span>';
+        btn.disabled=false;btn.innerText="💳 Update Payment";
+      }
+    })
+    .catch(e=>{
+      console.error(e);
+      msg.innerHTML='<span class="error">Server error while updating payment.</span>';
+      btn.disabled=false;btn.innerText="💳 Update Payment";
+    });
+}
+
+/* RESET */
+function resetForm(){
+  if(verifyController){verifyController.abort();verifyController=null}
+
+  const finish=()=>{
+    ["passwordInput","regIdInput","emailInput"].forEach(id=>document.getElementById(id).value="");
+
+    const btn=document.getElementById("scanBtn");
+    btn.disabled=false;btn.innerText="📷 Scan QR Code";
+    document.getElementById("qr-reader").style.display="none";
+
+    document.getElementById("resultBox").style.display="none";
+    ["statusMsg","regIdMsg","emailMsg","fullNameMsg","attendeeMsg","paymentMsg","paymentUpdateMsg"]
+      .forEach(id=>document.getElementById(id).innerHTML="");
+
+    const pay=document.getElementById("updatePaymentBtn");
+    pay.style.display="none";pay.disabled=false;
+    pay.innerText="💳 Update Payment";pay.dataset.registrationId="";
+    scanner=null;scanning=false;
   };
+
+  if(scanner&&scanning)
+    scanner.stop().catch(()=>{}).finally(finish);
+  else finish();
 }
 
+/* UI HELPERS */
+function showResult(msg,type){
+  const box=document.getElementById("resultBox");
+  box.style.display="block";
+  const el=document.getElementById("statusMsg");
+  el.className=type||"";el.innerHTML=msg;
+}
 
-/* =========================================================
-   LOAD DASHBOARD
-========================================================= */
-
-function loadDashboard() {
-
-  const tbody =
-    document.getElementById(
-      "dashboardBody"
-    );
-
-  /*
-   * Clear previous dashboard.
-   */
-
-  tbody.innerHTML = "";
-
-
-  /*
-   * Render a dashboard row.
-   */
-
-  function rowHtml(label, t) {
-
-    return `
-      <tr>
-        <td>${label}</td>
-        <td>${t.registrations || 0}</td>
-        <td>${t.adults || 0}</td>
-        <td>${t.kids || 0}</td>
-        <td>${t.veg || 0}</td>
-        <td>${t.nonveg || 0}</td>
-        <td>${t.attend || 0}</td>
-        <td>${t.paid || 0}</td>
-      </tr>
-    `;
+function setLoading(load){
+  const sub=document.getElementById("submitBtn"),scan=document.getElementById("scanBtn");
+  if(load){
+    sub.dataset.origText=sub.innerHTML;sub.innerText="Verifying...";sub.disabled=true;scan.disabled=true;
+  }else{
+    sub.innerText=sub.dataset.origText||"Submit";sub.disabled=false;scan.disabled=scanning;
   }
+}
 
+function escapeHtml(v){
+  return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
 
-  /*
-   * Request dashboard data.
-   */
+/* DASHBOARD */
+function zeroRow(){return{registrations:0,adults:0,kids:0,veg:0,nonveg:0,attend:0,paid:0}}
+function safeNum(v){const n=Number(v);return Number.isFinite(n)?Math.round(n):0}
 
-  fetch(
-    `${WEB_APP_URL}?mode=dashboard`
-  )
+function loadDashboard(){
+  const body=document.getElementById("dashboardBody");
+  body.innerHTML="";
 
-    .then(res => {
+  const row=(label,t)=>`<tr><td>${label}</td><td>${t.registrations||0}</td><td>${t.adults||0}</td><td>${t.kids||0}</td><td>${t.veg||0}</td><td>${t.nonveg||0}</td><td>${t.attend||0}</td><td>${t.paid||0}</td></tr>`;
 
-      const contentType =
-        (
-          res.headers.get(
-            "content-type"
-          ) || ""
-        ).toLowerCase();
-
-
-      if (
-        !res.ok ||
-        !contentType.includes(
-          "application/json"
-        )
-      ) {
-
-        throw new Error(
-          "Web app did not return JSON. " +
-          "It may require Google sign-in " +
-          "or the Web App deployment may not " +
-          "be accessible."
-        );
-      }
-
-      return res.json();
-
+  fetch(`${WEB_APP_URL}?mode=dashboard`)
+    .then(r=>{
+      const ct=(r.headers.get("content-type")||"").toLowerCase();
+      if(!r.ok||!ct.includes("application/json"))throw Error("Dashboard did not return JSON.");
+      return r.json();
     })
-
-
-    .then(data => {
-
-      console.log(
-        "Dashboard response:",
-        data
-      );
-
-
-      /*
-       * Backend aggregated format
-       */
-
-      if (
-        data &&
-        typeof data === "object" &&
-        "member" in data &&
-        "nonMember" in data &&
-        "total" in data
-      ) {
-
-        tbody.innerHTML +=
-          rowHtml(
-            "Member",
-            data.member ||
-              zeroRow()
-          );
-
-        tbody.innerHTML +=
-          rowHtml(
-            "Guest",
-            data.memberGuest ||
-              zeroRow()
-          );
-
-        tbody.innerHTML +=
-          rowHtml(
-            "Non-member",
-            data.nonMember ||
-              zeroRow()
-          );
-
-        tbody.innerHTML +=
-          rowHtml(
-            "Total",
-            data.total ||
-              zeroRow()
-          );
-
+    .then(data=>{
+      if(data&&typeof data==="object"&&"member"in data&&"nonMember"in data&&"total"in data){
+        body.innerHTML+=row("Member",data.member||zeroRow());
+        body.innerHTML+=row("Guest",data.memberGuest||zeroRow());
+        body.innerHTML+=row("Non-member",data.nonMember||zeroRow());
+        body.innerHTML+=row("Total",data.total||zeroRow());
         return;
       }
 
+      if(!Array.isArray(data))return renderZeroRows();
 
-      /*
-       * Fallback:
-       * Backend returned an array.
-       *
-       * Calculate totals on client side.
-       */
+      const groups={
+        member:{registrationsSet:new Set(),adults:0,kids:0,veg:0,nonveg:0,attend:0,paid:0},
+        guest:{registrationsSet:new Set(),adults:0,kids:0,veg:0,nonveg:0,attend:0,paid:0},
+        non:{registrationsSet:new Set(),adults:0,kids:0,veg:0,nonveg:0,attend:0,paid:0}
+      },all=new Set();
 
-      const memberTotals = {
+      data.forEach(r=>{
+        const id=(r.registrationId!==undefined&&r.registrationId!=="")?String(r.registrationId).trim():"row_"+Math.random();
+        all.add(id);
+        const type=String(r.isMember||"").trim().toLowerCase();
+        const g=type==="yes"||type==="true"||type==="y"?groups.member:type==="guest"?groups.guest:groups.non;
+        g.registrationsSet.add(id);g.adults+=safeNum(r.adults);
+        if(r.kids&&String(r.kids).toLowerCase()!=="none")g.kids+=safeNum(r.kids);
+        const food=String(r.foodPreference||"").toLowerCase();
+        if(food.includes("non"))g.nonveg++;else if(food.includes("veg"))g.veg++;
+        if(String(r.attendStatus||"").toLowerCase()==="ok")g.attend++;
+        if(String(r.paymentStatus||"").toLowerCase()==="ok")g.paid++;
+      });
 
-        registrationsSet:
-          new Set(),
-
-        adults: 0,
-        kids: 0,
-        veg: 0,
-        nonveg: 0,
-        attend: 0,
-        paid: 0
-
+      const out=g=>({registrations:g.registrationsSet.size,adults:g.adults,kids:g.kids,veg:g.veg,nonveg:g.nonveg,attend:g.attend,paid:g.paid});
+      const m=out(groups.member),g=out(groups.guest),n=out(groups.non);
+      const t={
+        registrations:all.size,
+        adults:m.adults+g.adults+n.adults,
+        kids:m.kids+g.kids+n.kids,
+        veg:m.veg+g.veg+n.veg,
+        nonveg:m.nonveg+g.nonveg+n.nonveg,
+        attend:m.attend+g.attend+n.attend,
+        paid:m.paid+g.paid
       };
 
-
-      const nonMemberTotals = {
-
-        registrationsSet:
-          new Set(),
-
-        adults: 0,
-        kids: 0,
-        veg: 0,
-        nonveg: 0,
-        attend: 0,
-        paid: 0
-
-      };
-
-
-      const memberGuestTotals = {
-
-        registrationsSet:
-          new Set(),
-
-        adults: 0,
-        kids: 0,
-        veg: 0,
-        nonveg: 0,
-        attend: 0,
-        paid: 0
-
-      };
-
-
-      const allIds =
-        new Set();
-
-
-      /*
-       * Process records.
-       */
-
-      if (Array.isArray(data)) {
-
-        data.forEach(record => {
-
-          /*
-           * Registration ID
-           */
-
-          const regId =
-            (
-              record.registrationId ||
-              record.registrationId === 0
-            )
-
-              ? String(
-                  record.registrationId
-                ).trim()
-
-              : (
-                  "row_" +
-                  Math.random()
-                    .toString(36)
-                    .slice(2, 8)
-                );
-
-
-          allIds.add(regId);
-
-
-          /*
-           * Member type
-           */
-
-          const isMemberVal =
-            (
-              record.isMember ||
-              ""
-            )
-              .toString()
-              .trim()
-              .toLowerCase();
-
-
-          const isMember =
-            isMemberVal === "yes" ||
-            isMemberVal === "true" ||
-            isMemberVal === "y";
-
-
-          const isMemberGuest =
-            isMemberVal === "guest";
-
-
-          const target =
-            isMember
-              ? memberTotals
-              : (
-                  isMemberGuest
-                    ? memberGuestTotals
-                    : nonMemberTotals
-                );
-
-
-          /*
-           * Registration count
-           */
-
-          target.registrationsSet.add(
-            regId
-          );
-
-
-          /*
-           * Adults
-           */
-
-          target.adults +=
-            safeNum(
-              record.adults || 0
-            );
-
-
-          /*
-           * Kids
-           */
-
-          if (
-            record.kids &&
-            record.kids
-              .toString()
-              .toLowerCase() !== "none"
-          ) {
-
-            target.kids +=
-              safeNum(
-                record.kids
-              );
-          }
-
-
-          /*
-           * Food preference
-           */
-
-          if (record.foodPreference) {
-
-            const food =
-              record.foodPreference
-                .toString()
-                .toLowerCase();
-
-
-            if (
-              food.includes("non")
-            ) {
-
-              target.nonveg += 1;
-
-            } else if (
-              food.includes("veg")
-            ) {
-
-              target.veg += 1;
-            }
-          }
-
-
-          /*
-           * Attendance
-           */
-
-          if (
-            (
-              record.attendStatus ||
-              ""
-            )
-              .toString()
-              .toLowerCase() === "ok"
-          ) {
-
-            target.attend += 1;
-          }
-
-
-          /*
-           * Payment
-           */
-
-          if (
-            (
-              record.paymentStatus ||
-              ""
-            )
-              .toString()
-              .toLowerCase() === "ok"
-          ) {
-
-            target.paid += 1;
-          }
-
-        });
-
-
-        /*
-         * Convert member totals
-         */
-
-        const memberOut = {
-
-          registrations:
-            memberTotals
-              .registrationsSet
-              .size,
-
-          adults:
-            memberTotals.adults,
-
-          kids:
-            memberTotals.kids,
-
-          veg:
-            memberTotals.veg,
-
-          nonveg:
-            memberTotals.nonveg,
-
-          attend:
-            memberTotals.attend,
-
-          paid:
-            memberTotals.paid
-        };
-
-
-        /*
-         * Convert guest totals
-         */
-
-        const memberGuestOut = {
-
-          registrations:
-            memberGuestTotals
-              .registrationsSet
-              .size,
-
-          adults:
-            memberGuestTotals.adults,
-
-          kids:
-            memberGuestTotals.kids,
-
-          veg:
-            memberGuestTotals.veg,
-
-          nonveg:
-            memberGuestTotals.nonveg,
-
-          attend:
-            memberGuestTotals.attend,
-
-          paid:
-            memberGuestTotals.paid
-        };
-
-
-        /*
-         * Convert non-member totals
-         */
-
-        const nonMemberOut = {
-
-          registrations:
-            nonMemberTotals
-              .registrationsSet
-              .size,
-
-          adults:
-            nonMemberTotals.adults,
-
-          kids:
-            nonMemberTotals.kids,
-
-          veg:
-            nonMemberTotals.veg,
-
-          nonveg:
-            nonMemberTotals.nonveg,
-
-          attend:
-            nonMemberTotals.attend,
-
-          paid:
-            nonMemberTotals.paid
-        };
-
-
-        /*
-         * Total
-         */
-
-        const totalOut = {
-
-          registrations:
-            allIds.size,
-
-          adults:
-            memberOut.adults +
-            nonMemberOut.adults +
-            memberGuestOut.adults,
-
-          kids:
-            memberOut.kids +
-            nonMemberOut.kids +
-            memberGuestOut.kids,
-
-          veg:
-            memberOut.veg +
-            nonMemberOut.veg +
-            memberGuestOut.veg,
-
-          nonveg:
-            memberOut.nonveg +
-            nonMemberOut.nonveg +
-            memberGuestOut.nonveg,
-
-          attend:
-            memberOut.attend +
-            nonMemberOut.attend +
-            memberGuestOut.attend,
-
-          paid:
-            memberOut.paid +
-            nonMemberOut.paid +
-            memberGuestOut.paid
-        };
-
-
-        /*
-         * Render four rows.
-         */
-
-        tbody.innerHTML +=
-          rowHtml(
-            "Member",
-            memberOut
-          );
-
-        tbody.innerHTML +=
-          rowHtml(
-            "Guest",
-            memberGuestOut
-          );
-
-        tbody.innerHTML +=
-          rowHtml(
-            "Non-member",
-            nonMemberOut
-          );
-
-        tbody.innerHTML +=
-          rowHtml(
-            "Total",
-            totalOut
-          );
-
-        return;
-      }
-
-
-      /*
-       * Unknown response shape.
-       * Show four empty rows.
-       */
-
-      tbody.innerHTML +=
-        rowHtml(
-          "Member",
-          zeroRow()
-        );
-
-      tbody.innerHTML +=
-        rowHtml(
-          "Guest",
-          zeroRow()
-        );
-
-      tbody.innerHTML +=
-        rowHtml(
-          "Non-member",
-          zeroRow()
-        );
-
-      tbody.innerHTML +=
-        rowHtml(
-          "Total",
-          zeroRow()
-        );
-
+      body.innerHTML+=row("Member",m);
+      body.innerHTML+=row("Guest",g);
+      body.innerHTML+=row("Non-member",n);
+      body.innerHTML+=row("Total",t);
     })
-
-
-    .catch(error => {
-
-      console.error(
-        "Failed to load dashboard:",
-        error
-      );
-
-
-      /*
-       * Keep four rows visible even
-       * when dashboard fails.
-       */
-
-      tbody.innerHTML = "";
-
-      tbody.innerHTML +=
-        rowHtml(
-          "Member",
-          zeroRow()
-        );
-
-      tbody.innerHTML +=
-        rowHtml(
-          "Guest",
-          zeroRow()
-        );
-
-      tbody.innerHTML +=
-        rowHtml(
-          "Non-member",
-          zeroRow()
-        );
-
-      tbody.innerHTML +=
-        rowHtml(
-          "Total",
-          zeroRow()
-        );
-
-
-      alert(
-        "Failed to load dashboard: " +
-        (
-          error &&
-          error.message
-            ? error.message
-            : "Unknown error"
-        )
-      );
-
+    .catch(e=>{
+      console.error(e);
+      renderZeroRows();
+      alert("Failed to load dashboard: "+e.message);
     });
 
+  function renderZeroRows(){
+    body.innerHTML=row("Member",zeroRow())+row("Guest",zeroRow())+row("Non-member",zeroRow())+row("Total",zeroRow());
+  }
 }
-
 </script>
 
 </body>
