@@ -36,10 +36,11 @@ th { background:#007bff; color:white;}
 <!-- SCAN / VERIFY SECTION -->
 <section id="scanSection" style="display:block;">
   <input type="password" id="passwordInput" placeholder="Enter password">
-  <button onclick="startScanning()">📷 Scan QR Code</button>
+  <button id="scanBtn" onclick="startScanning()">📷 Scan QR Code</button>
   <div id="qr-reader"></div>
-  <input id="regIdInput" placeholder="Registration ID">
-  <button onclick="submitId()">Submit</button>
+  <input id="regIdInput" placeholder="Registration ID (or scanned value)">
+  <input id="emailInput" placeholder="Email (optional)">
+  <button id="submitBtn" onclick="submitId()">Submit</button>
 
   <div id="resultBox">
     <div id="statusMsg"></div>
@@ -89,6 +90,7 @@ let scanner = null;
 let scanning = false;
 
 function startScanning() {
+  const scanBtn = document.getElementById('scanBtn');
   let qrDiv = document.getElementById("qr-reader");
   if (scanning) { stopScanning(); return; }
 
@@ -98,11 +100,17 @@ function startScanning() {
   Html5Qrcode.getCameras().then(devices => {
     let backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
     scanning = true;
+    scanBtn.innerText = 'Stop Scanning';
     scanner.start(
       backCam.id,
       { fps:10, qrbox:250 },
       qrText => {
-        document.getElementById("regIdInput").value = qrText;
+        // Populate email if scanned text looks like an email, otherwise registration id
+        if (typeof qrText === 'string' && qrText.includes('@')) {
+          document.getElementById('emailInput').value = qrText;
+        } else {
+          document.getElementById('regIdInput').value = qrText;
+        }
         stopScanning();
       }
     );
@@ -110,27 +118,57 @@ function startScanning() {
 }
 
 function stopScanning(){
+  const scanBtn = document.getElementById('scanBtn');
   if(scanner && scanning){
     scanner.stop().then(()=>{
       document.getElementById("qr-reader").style.display="none";
       scanning=false;
+      scanBtn.innerText = '📷 Scan QR Code';
+      scanBtn.disabled = false;
+    }).catch(()=>{
+      // ensure UI reset even if stop fails
+      document.getElementById("qr-reader").style.display="none";
+      scanning=false;
+      scanBtn.innerText = '📷 Scan QR Code';
+      scanBtn.disabled = false;
     });
+  } else {
+    // nothing to stop, ensure button text is correct
+    scanBtn.innerText = '📷 Scan QR Code';
+    scanBtn.disabled = false;
   }
 }
 
 /* -------------------------
-   SUBMIT REGISTRATION ID
+   SUBMIT REGISTRATION ID / EMAIL
 --------------------------*/
 function submitId() {
   const regId = document.getElementById("regIdInput").value.trim();
+  const email = document.getElementById("emailInput").value.trim();
   const pass = document.getElementById("passwordInput").value.trim();
-  if(!pass){ showStatus("Enter password","error"); return; }
-  if(!regId){ showStatus("Enter or scan registration ID","warning"); return; }
+  const submitBtn = document.getElementById('submitBtn');
+  const scanBtn = document.getElementById('scanBtn');
 
-  fetch(`${WEB_APP_URL}?mode=verify&registrationId=${encodeURIComponent(regId)}&password=${encodeURIComponent(pass)}`)
+  if(!pass){ showStatus("Enter password","error"); return; }
+  if(!regId && !email){ showStatus("Enter or scan registration ID or email","warning"); return; }
+
+  // build URL params - include registrationId if present, otherwise email
+  const params = new URLSearchParams();
+  params.append('mode','verify');
+  params.append('password', pass);
+  if(regId){ params.append('registrationId', regId); }
+  else { params.append('email', email); }
+
+  // show loading state
+  setLoading(true);
+  showStatus('Verifying...', '');
+  document.getElementById('resultBox').style.display='block';
+
+  fetch(`${WEB_APP_URL}?${params.toString()}`)
     .then(res=>res.json())
     .then(data=>handleResponse(data))
-    .catch(()=>showStatus("Server error. Try again.","error"));
+    .catch(()=>showStatus("Server error. Try again.","error"))
+    .finally(()=> setLoading(false));
 }
 
 function handleResponse(data){
@@ -143,14 +181,39 @@ function handleResponse(data){
                  data.status==="Already updated"?"warning":"error";
 
   showStatus(data.status, cssClass);
-  document.getElementById("fullNameMsg").innerHTML = data.fullName ? "Name: <b>"+data.fullName+"</b>":"";
-  document.getElementById("attendeeMsg").innerHTML = data.attendeeNames ? "Attendees: <b>"+data.attendeeNames+"</b>":"";
+  document.getElementById("fullNameMsg").innerHTML = data.fullName ? "Name: <b>"+escapeHtml(data.fullName)+"</b>":"";
+  document.getElementById("attendeeMsg").innerHTML = data.attendeeNames ? "Attendees: <b>"+escapeHtml(data.attendeeNames)+"</b>":"";
 }
 
 function showStatus(msg,type){ 
   const el = document.getElementById("statusMsg"); 
   el.className=type; 
   el.innerHTML=msg;
+}
+
+function setLoading(isLoading){
+  const submitBtn = document.getElementById('submitBtn');
+  const scanBtn = document.getElementById('scanBtn');
+  if(isLoading){
+    submitBtn.dataset.origText = submitBtn.innerHTML;
+    submitBtn.innerHTML = 'Verifying...';
+    submitBtn.disabled = true;
+    scanBtn.disabled = true;
+  } else {
+    submitBtn.innerHTML = submitBtn.dataset.origText || 'Submit';
+    submitBtn.disabled = false;
+    scanBtn.disabled = false;
+  }
+}
+
+// small helper to avoid injecting raw HTML from responses
+function escapeHtml(unsafe) {
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/\'/g, '&#039;');
 }
 
 /* -------------------------
