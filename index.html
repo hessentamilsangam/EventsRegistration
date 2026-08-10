@@ -54,6 +54,7 @@ th { background:#007bff; color:white;}
   <table id="dashboardTable">
     <thead>
       <tr>
+        <th>Registrations</th>
         <th>Member Type</th>
         <th>Adults</th>
         <th>Kids</th>
@@ -164,31 +165,59 @@ function loadDashboard(){
   const tbody = document.getElementById("dashboardBody");
   tbody.innerHTML=""; // clear
 
-  // Initialize aggregates for members and non-members
-  const memberTotals = { adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
-  const nonMemberTotals = { adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
+  // render helper expects objects with the new 'registrations' property
+  function rowHtml(label, t){
+    return `<tr>`+
+           `<td>${t.registrations || 0}</td>`+
+           `<td>${label}</td>`+
+           `<td>${t.adults || 0}</td>`+
+           `<td>${t.kids || 0}</td>`+
+           `<td>${t.veg || 0}</td>`+
+           `<td>${t.nonveg || 0}</td>`+
+           `<td>${t.attend || 0}</td>`+
+           `<td>${t.paid || 0}</td>`+
+           `</tr>`;
+  }
 
   fetch(`${WEB_APP_URL}?mode=dashboard`)
-    .then(res=>res.json())
+    .then(res=>{
+      const contentType = (res.headers.get('content-type') || '');
+      if (!res.ok || !contentType.includes('application/json')) {
+        throw new Error('Web app did not return JSON. It may require Google sign-in (302 redirect). Open the web app /exec URL in Incognito to confirm.');
+      }
+      return res.json();
+    })
     .then(data=>{
-      // Data is expected to be an array of registrations
-      // Each registration has: isMember, foodPreference, adults, kids, attendStatus, paymentStatus
-      
-      if(Array.isArray(data)){
+      console.log("dashboard fetch response:", data);
+
+      // If backend returns the new aggregated shape
+      if (data && typeof data === 'object' && 'member' in data && 'nonMember' in data && 'total' in data) {
+        tbody.innerHTML += rowHtml('Member', data.member);
+        tbody.innerHTML += rowHtml('Non-member', data.nonMember);
+        tbody.innerHTML += rowHtml('Total', data.total);
+        return;
+      }
+
+      // Fallback: if data is array of records, compute aggregates client-side (also count unique registrationIds)
+      const memberTotals = { registrationsSet: new Set(), adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
+      const nonMemberTotals = { registrationsSet: new Set(), adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
+      const allIds = new Set();
+
+      if (Array.isArray(data)) {
         data.forEach(record => {
-          // Determine if member or non-member
+          const regId = (record.registrationId || record.registrationId === 0) ? String(record.registrationId).trim() : ('row_' + Math.random().toString(36).slice(2,8));
+          allIds.add(regId);
+
           const isMember = (record.isMember || '').toString().toLowerCase() === 'yes';
           const target = isMember ? memberTotals : nonMemberTotals;
-          
-          // Count adults
+
+          target.registrationsSet.add(regId);
           target.adults += safeNum(record.adults || 0);
-          
-          // Count kids (only if present, not "none")
+
           if(record.kids && record.kids.toString().toLowerCase() !== 'none'){
             target.kids += safeNum(record.kids);
           }
-          
-          // Count food preference
+
           if(record.foodPreference){
             const food = record.foodPreference.toString().toLowerCase();
             if(food.includes('veg')){
@@ -197,88 +226,61 @@ function loadDashboard(){
               target.nonveg += 1;
             }
           }
-          
-          // Count attend status (ok = attended)
-          if(record.attendStatus === 'ok'){
+
+          if((record.attendStatus || '').toString().toLowerCase() === 'ok'){
             target.attend += 1;
           }
-          
-          // Count payment status (ok = paid)
-          if(record.paymentStatus === 'ok'){
+
+          if((record.paymentStatus || '').toString().toLowerCase() === 'ok'){
             target.paid += 1;
           }
         });
-      } else {
-        // If data is an object keyed by event names, handle that structure
-        for(const eventName in data){
-          const eventRecords = data[eventName];
-          if(Array.isArray(eventRecords)){
-            eventRecords.forEach(record => {
-              const isMember = (record.isMember || '').toString().toLowerCase() === 'yes';
-              const target = isMember ? memberTotals : nonMemberTotals;
-              
-              target.adults += safeNum(record.adults || 0);
-              
-              if(record.kids && record.kids.toString().toLowerCase() !== 'none'){
-                target.kids += safeNum(record.kids);
-              }
-              
-              if(record.foodPreference){
-                const food = record.foodPreference.toString().toLowerCase();
-                if(food.includes('veg')){
-                  target.veg += 1;
-                } else if(food.includes('non')){
-                  target.nonveg += 1;
-                }
-              }
-              
-              if(record.attendStatus === 'ok'){
-                target.attend += 1;
-              }
-              
-              if(record.paymentStatus === 'ok'){
-                target.paid += 1;
-              }
-            });
-          }
-        }
+
+        const memberOut = {
+          registrations: memberTotals.registrationsSet.size,
+          adults: memberTotals.adults,
+          kids: memberTotals.kids,
+          veg: memberTotals.veg,
+          nonveg: memberTotals.nonveg,
+          attend: memberTotals.attend,
+          paid: memberTotals.paid
+        };
+        const nonMemberOut = {
+          registrations: nonMemberTotals.registrationsSet.size,
+          adults: nonMemberTotals.adults,
+          kids: nonMemberTotals.kids,
+          veg: nonMemberTotals.veg,
+          nonveg: nonMemberTotals.nonveg,
+          attend: nonMemberTotals.attend,
+          paid: nonMemberTotals.paid
+        };
+        const totalOut = {
+          registrations: allIds.size,
+          adults: memberOut.adults + nonMemberOut.adults,
+          kids: memberOut.kids + nonMemberOut.kids,
+          veg: memberOut.veg + nonMemberOut.veg,
+          nonveg: memberOut.nonveg + nonMemberOut.nonveg,
+          attend: memberOut.attend + nonMemberOut.attend,
+          paid: memberOut.paid + nonMemberOut.paid
+        };
+
+        tbody.innerHTML += rowHtml('Member', memberOut);
+        tbody.innerHTML += rowHtml('Non-member', nonMemberOut);
+        tbody.innerHTML += rowHtml('Total', totalOut);
+        return;
       }
 
-      // Compute totals (sum of member + non-member)
-      const total = {
-        adults: memberTotals.adults + nonMemberTotals.adults,
-        kids: memberTotals.kids + nonMemberTotals.kids,
-        veg: memberTotals.veg + nonMemberTotals.veg,
-        nonveg: memberTotals.nonveg + nonMemberTotals.nonveg,
-        attend: memberTotals.attend + nonMemberTotals.attend,
-        paid: memberTotals.paid + nonMemberTotals.paid
-      };
-
-      function rowHtml(label, t){
-        return `<tr>`+
-               `<td>${label}</td>`+
-               `<td>${t.adults}</td>`+
-               `<td>${t.kids}</td>`+
-               `<td>${t.veg}</td>`+
-               `<td>${t.nonveg}</td>`+
-               `<td>${t.attend}</td>`+
-               `<td>${t.paid}</td>`+
-               `</tr>`;
-      }
-
-      // Render exactly 3 rows
-      tbody.innerHTML += rowHtml('Member', memberTotals);
-      tbody.innerHTML += rowHtml('Non-member', nonMemberTotals);
-      tbody.innerHTML += rowHtml('Total', total);
-
+      // Unknown shape: render zeros but keep three rows as required
+      tbody.innerHTML += rowHtml('Member', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
+      tbody.innerHTML += rowHtml('Non-member', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
+      tbody.innerHTML += rowHtml('Total', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
     })
-    .catch(()=>{
-      // If fetch fails, still render three empty rows to respect the requirement
-      tbody.innerHTML += `<tr><td>Member</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
-      tbody.innerHTML += `<tr><td>Non-member</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
-      tbody.innerHTML += `<tr><td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>`;
-      // Also notify user
-      alert("Failed to load dashboard");
+    .catch(err=>{
+      console.error("Failed to load dashboard", err);
+      tbody.innerHTML += rowHtml('Member', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
+      tbody.innerHTML += rowHtml('Non-member', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
+      tbody.innerHTML += rowHtml('Total', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
+      alert("Failed to load dashboard: " + (err && err.message ? err.message : 'unknown error'));
     });
 }
 </script>
