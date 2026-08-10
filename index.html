@@ -55,8 +55,8 @@ th { background:#007bff; color:white;}
   <table id="dashboardTable">
     <thead>
       <tr>
-        <th>Registrations</th>
         <th>Member Type</th>
+        <th>Registrations</th>
         <th>Adults</th>
         <th>Kids</th>
         <th>Veg</th>
@@ -233,8 +233,8 @@ function loadDashboard(){
   // render helper expects objects with the new 'registrations' property
   function rowHtml(label, t){
     return `<tr>`+
-           `<td>${t.registrations || 0}</td>`+
            `<td>${label}</td>`+
+           `<td>${t.registrations || 0}</td>`+
            `<td>${t.adults || 0}</td>`+
            `<td>${t.kids || 0}</td>`+
            `<td>${t.veg || 0}</td>`+
