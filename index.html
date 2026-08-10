@@ -150,7 +150,6 @@ function submitId() {
   const scanBtn = document.getElementById('scanBtn');
 
   if(!pass){ showStatus("Enter password","error"); return; }
-  if(!regId && !email){ showStatus("Enter or scan registration ID or email","warning"); return; }
 
   // build URL params - include registrationId if present, otherwise email
   const params = new URLSearchParams();
