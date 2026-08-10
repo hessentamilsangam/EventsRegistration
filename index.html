@@ -183,8 +183,11 @@ function handleResponse(data){
                  data.status==="Already updated"?"warning":"error";
 
   showStatus(data.status, cssClass);
+  document.getElementById("regIdMsg").innerHTML = data.registrationId ? "Registration ID: <b>"+escapeHtml(data.registrationId)+"</b>":"";
+  document.getElementById("emailMsg").innerHTML = data.email ? "Email: <b>"+escapeHtml(data.email)+"</b>":"";
   document.getElementById("fullNameMsg").innerHTML = data.fullName ? "Name: <b>"+escapeHtml(data.fullName)+"</b>":"";
   document.getElementById("attendeeMsg").innerHTML = data.attendeeNames ? "Attendees: <b>"+escapeHtml(data.attendeeNames)+"</b>":"";
+  document.getElementById("paymentMsg").innerHTML = data.paymentStatus ? "Payment Status: <b>"+escapeHtml(data.paymentStatus)+"</b>":"";
 }
 
 function showStatus(msg,type){ 
