@@ -66,7 +66,7 @@ th { background:#007bff; color:white;}
       </tr>
     </thead>
     <tbody id="dashboardBody">
-      <!-- Exactly 4 rows will be rendered here: Member, Member Guest, Non-member, Total -->
+      <!-- Exactly 4 rows will be rendered here: Member, Guest, Non-member, Total -->
     </tbody>
   </table>
 </section>
@@ -258,7 +258,7 @@ function loadDashboard(){
       // If backend returns the new aggregated shape
       if (data && typeof data === 'object' && 'member' in data && 'nonMember' in data && 'total' in data) {
         tbody.innerHTML += rowHtml('Member', data.member);
-        tbody.innerHTML += rowHtml('Member Guest', data.memberGuest || zeroRow());
+        tbody.innerHTML += rowHtml('Guest', data.memberGuest || zeroRow());
         tbody.innerHTML += rowHtml('Non-member', data.nonMember);
         tbody.innerHTML += rowHtml('Total', data.total);
         return;
@@ -343,7 +343,7 @@ function loadDashboard(){
         };
 
         tbody.innerHTML += rowHtml('Member', memberOut);
-        tbody.innerHTML += rowHtml('Member Guest', memberGuestOut);
+        tbody.innerHTML += rowHtml('Guest', memberGuestOut);
         tbody.innerHTML += rowHtml('Non-member', nonMemberOut);
         tbody.innerHTML += rowHtml('Total', totalOut);
         return;
@@ -351,14 +351,14 @@ function loadDashboard(){
 
       // Unknown shape: render zeros but keep four rows as required
       tbody.innerHTML += rowHtml('Member', zeroRow());
-      tbody.innerHTML += rowHtml('Member Guest', zeroRow());
+      tbody.innerHTML += rowHtml('Guest', zeroRow());
       tbody.innerHTML += rowHtml('Non-member', zeroRow());
       tbody.innerHTML += rowHtml('Total', zeroRow());
     })
     .catch(err=>{
       console.error("Failed to load dashboard", err);
       tbody.innerHTML += rowHtml('Member', zeroRow());
-      tbody.innerHTML += rowHtml('Member Guest', zeroRow());
+      tbody.innerHTML += rowHtml('Guest', zeroRow());
       tbody.innerHTML += rowHtml('Non-member', zeroRow());
       tbody.innerHTML += rowHtml('Total', zeroRow());
       alert("Failed to load dashboard: " + (err && err.message ? err.message : 'unknown error'));
