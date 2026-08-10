@@ -8,55 +8,218 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body { font-family: Arial, sans-serif; background: #f2f2f2; margin: 0; padding: 0;}
-header { background: #007bff; color: white; padding: 15px; text-align:center; font-size:1.2em; }
-nav { display:flex; justify-content:center; background:#eee; }
-nav button { margin:5px; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; background:#007bff; color:white; }
-nav button.active { background:#0056b3; }
-section { display:none; padding:20px; max-width:700px; margin:auto; background:white; border-radius:10px; margin-top:20px;}
-input, button { width:100%; padding:10px; margin-top:10px; font-size:16px; border-radius:6px; }
-button:hover { opacity:0.9; }
-#qr-reader { margin-top:15px; display:none;}
-#resultBox, #dashboardTable { margin-top:15px;}
-#resultBox { padding:15px; background:#f9f9f9; border-radius:8px; display:none;}
-.success { color:green; } .warning { color:orange; } .error { color:red; }
-table { width:100%; border-collapse:collapse; margin-top:10px;}
-th, td { border:1px solid #ccc; padding:8px; text-align:center;}
-th { background:#007bff; color:white;}
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #007bff;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  background: #eee;
+}
+
+nav button {
+  margin: 5px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #007bff;
+  color: white;
+}
+
+nav button.active {
+  background: #0056b3;
+}
+
+section {
+  display: none;
+  padding: 20px;
+  max-width: 700px;
+  margin: auto;
+  background: white;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+input,
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  background: #007bff;
+  color: white;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#qr-reader {
+  margin-top: 15px;
+  display: none;
+}
+
+#resultBox,
+#dashboardTable {
+  margin-top: 15px;
+}
+
+#resultBox {
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  display: none;
+}
+
+.success {
+  color: green;
+}
+
+.warning {
+  color: orange;
+}
+
+.error {
+  color: red;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background: #007bff;
+  color: white;
+}
 </style>
 </head>
+
 <body>
 
 <header>Registration System</header>
+
 <nav>
-  <button class="tabBtn active" onclick="showSection('scanSection', this)">Scan / Verify</button>
-  <button class="tabBtn" onclick="showSection('dashboardSection', this)">Dashboard</button>
+  <button
+    class="tabBtn active"
+    onclick="showSection('scanSection', this)">
+    Scan / Verify
+  </button>
+
+  <button
+    class="tabBtn"
+    onclick="showSection('dashboardSection', this)">
+    Dashboard
+  </button>
 </nav>
 
-<!-- SCAN / VERIFY SECTION -->
+<!-- =========================
+     SCAN / VERIFY SECTION
+========================= -->
+
 <section id="scanSection" style="display:block;">
-  <input type="password" id="passwordInput" placeholder="Enter password">
-  <button id="scanBtn" onclick="startScanning()">📷 Scan QR Code</button>
+
+  <input
+    type="password"
+    id="passwordInput"
+    placeholder="Enter password">
+
+  <button
+    id="scanBtn"
+    onclick="startScanning()">
+    📷 Scan QR Code
+  </button>
+
   <div id="qr-reader"></div>
-  <input id="regIdInput" placeholder="Registration ID (or scanned value)">
-  <input id="emailInput" placeholder="Email (optional)">
-  <button id="submitBtn" onclick="submitId()">Submit</button>
-  <button id="resetBtn" type="button" onclick="resetForm()" style="background:#6c757d;">🔄 Reset</button>
+
+  <input
+    id="regIdInput"
+    placeholder="Registration ID (or scanned value)">
+
+  <input
+    id="emailInput"
+    placeholder="Email (optional)">
+
+  <button
+    id="submitBtn"
+    onclick="submitId()">
+    Submit
+  </button>
+
+  <button
+    id="resetBtn"
+    type="button"
+    onclick="resetForm()"
+    style="background:#6c757d;">
+    🔄 Reset
+  </button>
+
+  <!-- RESULT AREA -->
 
   <div id="resultBox">
+
     <div id="statusMsg"></div>
+
     <div id="regIdMsg"></div>
+
     <div id="emailMsg"></div>
+
     <div id="fullNameMsg"></div>
+
     <div id="attendeeMsg"></div>
+
     <div id="paymentMsg"></div>
+
   </div>
+
 </section>
 
-<!-- DASHBOARD SECTION -->
+
+<!-- =========================
+     DASHBOARD SECTION
+========================= -->
+
 <section id="dashboardSection">
-  <h3 style="text-align:center;">Event Dashboard</h3>
+
+  <h3 style="text-align:center;">
+    Event Dashboard
+  </h3>
+
   <table id="dashboardTable">
+
     <thead>
       <tr>
         <th>Member Type</th>
@@ -69,308 +232,1546 @@ th { background:#007bff; color:white;}
         <th>Payment</th>
       </tr>
     </thead>
+
     <tbody id="dashboardBody">
-      <!-- Exactly 4 rows will be rendered here: Member, Guest, Non-member, Total -->
+      <!-- Rows generated by JavaScript -->
     </tbody>
+
   </table>
+
 </section>
 
-<script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz2XU2Ij-GpCZU00gcG1a8OhJtOEYt7L0AKz6oF8F6oGNHuwy63OO2fLL5WBDFSR6M/exec"
-// TAB SWITCHING
-function showSection(id, btn){
-  document.querySelectorAll('section').forEach(s=>s.style.display='none');
-  document.getElementById(id).style.display='block';
-  document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  if(id==='dashboardSection'){ loadDashboard(); }
-}
 
-/* -------------------------
-   QR SCANNING
---------------------------*/
+<script>
+
+/* =========================================================
+   GOOGLE APPS SCRIPT WEB APP URL
+========================================================= */
+
+const WEB_APP_URL =
+  "https://script.google.com/macros/s/AKfycbz2XU2Ij-GpCZU00gcG1a8OhJtOEYt7L0AKz6oF8F6oGNHuwy63OO2fLL5WBDFSR6M/exec";
+
+
+/* =========================================================
+   GLOBAL VARIABLES
+========================================================= */
+
 let scanner = null;
 let scanning = false;
+let verifyController = null;
+
+
+/* =========================================================
+   TAB SWITCHING
+========================================================= */
+
+function showSection(id, btn) {
+
+  document.querySelectorAll("section").forEach(section => {
+    section.style.display = "none";
+  });
+
+  document.getElementById(id).style.display = "block";
+
+  document.querySelectorAll(".tabBtn").forEach(button => {
+    button.classList.remove("active");
+  });
+
+  btn.classList.add("active");
+
+  if (id === "dashboardSection") {
+    loadDashboard();
+  }
+}
+
+
+/* =========================================================
+   QR SCANNING
+========================================================= */
 
 function startScanning() {
-  const scanBtn = document.getElementById('scanBtn');
-  let qrDiv = document.getElementById("qr-reader");
-  if (scanning) { stopScanning(); return; }
+
+  const scanBtn = document.getElementById("scanBtn");
+  const qrDiv = document.getElementById("qr-reader");
+
+  /*
+   * If scanner is already running,
+   * pressing the button stops it.
+   */
+  if (scanning) {
+    stopScanning();
+    return;
+  }
 
   qrDiv.style.display = "block";
-  scanner = new Html5Qrcode("qr-reader");
 
-  Html5Qrcode.getCameras().then(devices => {
-    let backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
-    scanning = true;
-    scanBtn.innerText = 'Stop Scanning';
-    scanner.start(
-      backCam.id,
-      { fps:10, qrbox:250 },
-      qrText => {
-        // Populate email if scanned text looks like an email, otherwise registration id
-        if (typeof qrText === 'string' && qrText.includes('@')) {
-          document.getElementById('emailInput').value = qrText;
-        } else {
-          document.getElementById('regIdInput').value = qrText;
-        }
-        stopScanning();
-      }
+  scanBtn.disabled = true;
+  scanBtn.innerText = "Starting camera...";
+
+  /*
+   * Create scanner
+   */
+  try {
+    scanner = new Html5Qrcode("qr-reader");
+  } catch (error) {
+
+    console.error("Scanner initialization error:", error);
+
+    showStatus(
+      "Unable to initialize QR scanner.",
+      "error"
     );
-  }).catch(()=>{ showStatus("Camera not accessible","error"); });
-}
 
-function stopScanning(){
-  const scanBtn = document.getElementById('scanBtn');
-  if(scanner && scanning){
-    scanner.stop().then(()=>{
-      document.getElementById("qr-reader").style.display="none";
-      scanning=false;
-      scanBtn.innerText = '📷 Scan QR Code';
-      scanBtn.disabled = false;
-    }).catch(()=>{
-      // ensure UI reset even if stop fails
-      document.getElementById("qr-reader").style.display="none";
-      scanning=false;
-      scanBtn.innerText = '📷 Scan QR Code';
-      scanBtn.disabled = false;
-    });
-  } else {
-    // nothing to stop, ensure button text is correct
-    scanBtn.innerText = '📷 Scan QR Code';
+    qrDiv.style.display = "none";
     scanBtn.disabled = false;
-  }
-}
+    scanBtn.innerText = "📷 Scan QR Code";
 
-/* -------------------------
-   SUBMIT REGISTRATION ID / EMAIL
---------------------------*/
-function submitId() {
-  const regId = document.getElementById("regIdInput").value.trim();
-  const email = document.getElementById("emailInput").value.trim();
-  const pass = document.getElementById("passwordInput").value.trim();
-  const submitBtn = document.getElementById('submitBtn');
-  const scanBtn = document.getElementById('scanBtn');
-
-  if(!pass){ showStatus("Enter password","error"); return; }
-
-  // build URL params - include registrationId if present, otherwise email
-  const params = new URLSearchParams();
-  params.append('mode','verify');
-  params.append('password', pass);
-  if(regId){ params.append('registrationId', regId); }
-  else { params.append('email', email); }
-
-  // show loading state
-  setLoading(true);
-  showStatus('Verifying...', '');
-  document.getElementById('resultBox').style.display='block';
-
-  fetch(`${WEB_APP_URL}?${params.toString()}`)
-    .then(res=>res.json())
-    .then(data=>handleResponse(data))
-    .catch(()=>showStatus("Server error. Try again.","error"))
-    .finally(()=> setLoading(false));
-}
-
-function handleResponse(data){
-  document.getElementById("resultBox").style.display="block";
-
-  if(data.status==="AUTH_FAILED"){ showStatus("Incorrect password","error"); return; }
-  if(data.status==="MISSING_ID"){ showStatus("Missing registration ID","error"); return; }
-
-  let cssClass = data.status==="Updated successfully"?"success":
-                 data.status==="Already updated"?"warning":"error";
-
-  showStatus(data.status, cssClass);
-  document.getElementById("regIdMsg").innerHTML = data.registrationId ? "Registration ID: <b>"+escapeHtml(data.registrationId)+"</b>":"";
-  document.getElementById("emailMsg").innerHTML = data.email ? "Email: <b>"+escapeHtml(data.email)+"</b>":"";
-  document.getElementById("fullNameMsg").innerHTML = data.fullName ? "Name: <b>"+escapeHtml(data.fullName)+"</b>":"";
-  document.getElementById("attendeeMsg").innerHTML = data.attendeeNames ? "Attendees: <b>"+escapeHtml(data.attendeeNames)+"</b>":"";
-  document.getElementById("paymentMsg").innerHTML = data.paymentStatus ? "Payment Status: <b>"+escapeHtml(data.paymentStatus)+"</b>":"";
-}
-
-function showStatus(msg,type){ 
-  const el = document.getElementById("statusMsg"); 
-  el.className=type; 
-  el.innerHTML=msg;
-}
-
-function setLoading(isLoading){
-  const submitBtn = document.getElementById('submitBtn');
-  const scanBtn = document.getElementById('scanBtn');
-  if(isLoading){
-    submitBtn.dataset.origText = submitBtn.innerHTML;
-    submitBtn.innerHTML = 'Verifying...';
-    submitBtn.disabled = true;
-    scanBtn.disabled = true;
-  } else {
-    submitBtn.innerHTML = submitBtn.dataset.origText || 'Submit';
-    submitBtn.disabled = false;
-    scanBtn.disabled = false;
-  }
-}
-
-// small helper to avoid injecting raw HTML from responses
-function escapeHtml(unsafe) {
-  return String(unsafe)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
-    .replace(/\'/g, '&#039;');
-}
-
-/* -------------------------
-   DASHBOARD
---------------------------*/
-function safeNum(v){
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.round(n) : 0;
-}
-
-function zeroRow(){
-  return { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
-}
-
-function loadDashboard(){
-  const tbody = document.getElementById("dashboardBody");
-  tbody.innerHTML=""; // clear
-
-  // render helper expects objects with the new 'registrations' property
-  function rowHtml(label, t){
-    return `<tr>`+
-           `<td>${label}</td>`+
-           `<td>${t.registrations || 0}</td>`+
-           `<td>${t.adults || 0}</td>`+
-           `<td>${t.kids || 0}</td>`+
-           `<td>${t.veg || 0}</td>`+
-           `<td>${t.nonveg || 0}</td>`+
-           `<td>${t.attend || 0}</td>`+
-           `<td>${t.paid || 0}</td>`+
-           `</tr>`;
+    return;
   }
 
-  fetch(`${WEB_APP_URL}?mode=dashboard`)
-    .then(res=>{
-      const contentType = (res.headers.get('content-type') || '');
-      if (!res.ok || !contentType.includes('application/json')) {
-        throw new Error('Web app did not return JSON. It may require Google sign-in (302 redirect). Open the web app /exec URL in Incognito to confirm.');
+
+  /*
+   * Get available cameras
+   */
+  Html5Qrcode.getCameras()
+
+    .then(devices => {
+
+      if (!devices || devices.length === 0) {
+        throw new Error("No camera found.");
       }
-      return res.json();
-    })
-    .then(data=>{
-      console.log("dashboard fetch response:", data);
 
-      // If backend returns the new aggregated shape
-      if (data && typeof data === 'object' && 'member' in data && 'nonMember' in data && 'total' in data) {
-        tbody.innerHTML += rowHtml('Member', data.member);
-        tbody.innerHTML += rowHtml('Guest', data.memberGuest || zeroRow());
-        tbody.innerHTML += rowHtml('Non-member', data.nonMember);
-        tbody.innerHTML += rowHtml('Total', data.total);
+      /*
+       * Try to find rear/back camera.
+       */
+      let backCam =
+        devices.find(device =>
+          (device.label || "")
+            .toLowerCase()
+            .includes("back")
+        );
+
+      /*
+       * If no back camera,
+       * use first available camera.
+       */
+      if (!backCam) {
+        backCam = devices[0];
+      }
+
+      scanning = true;
+
+      scanBtn.disabled = false;
+      scanBtn.innerText = "⏹ Stop Scanning";
+
+
+      /*
+       * Start scanner
+       */
+      return scanner.start(
+
+        backCam.id,
+
+        {
+          fps: 10,
+          qrbox: 250
+        },
+
+        qrText => {
+
+          console.log("QR scanned:", qrText);
+
+          /*
+           * If QR value looks like email,
+           * put it into email field.
+           *
+           * Otherwise put it into
+           * registration ID field.
+           */
+          if (
+            typeof qrText === "string" &&
+            qrText.includes("@")
+          ) {
+
+            document.getElementById(
+              "emailInput"
+            ).value = qrText;
+
+          } else {
+
+            document.getElementById(
+              "regIdInput"
+            ).value = qrText;
+
+          }
+
+          /*
+           * Automatically stop scanner
+           * after successful scan.
+           */
+          stopScanning();
+
+        },
+
+        errorMessage => {
+          /*
+           * Scanner continuously reports
+           * "QR code not found" messages.
+           *
+           * We intentionally don't display
+           * those messages to the user.
+           */
+        }
+
+      );
+
+    })
+
+    .catch(error => {
+
+      console.error("Camera error:", error);
+
+      scanning = false;
+
+      qrDiv.style.display = "none";
+
+      scanBtn.disabled = false;
+
+      scanBtn.innerText = "📷 Scan QR Code";
+
+      showStatus(
+        "Camera not accessible. Please allow camera permission.",
+        "error"
+      );
+
+      document.getElementById(
+        "resultBox"
+      ).style.display = "block";
+
+    });
+
+}
+
+
+/* =========================================================
+   STOP QR SCANNER
+========================================================= */
+
+function stopScanning() {
+
+  const scanBtn =
+    document.getElementById("scanBtn");
+
+  const qrReader =
+    document.getElementById("qr-reader");
+
+
+  /*
+   * If scanner exists and is running,
+   * stop it.
+   */
+  if (scanner && scanning) {
+
+    scanner.stop()
+
+      .then(() => {
+
+        console.log("QR scanner stopped.");
+
+      })
+
+      .catch(error => {
+
+        console.warn(
+          "Scanner stop warning:",
+          error
+        );
+
+      })
+
+      .finally(() => {
+
+        scanning = false;
+        scanner = null;
+
+        qrReader.style.display = "none";
+
+        scanBtn.disabled = false;
+
+        scanBtn.innerText =
+          "📷 Scan QR Code";
+
+      });
+
+  } else {
+
+    /*
+     * Make sure UI is reset even when
+     * scanner isn't actually running.
+     */
+
+    scanning = false;
+    scanner = null;
+
+    qrReader.style.display = "none";
+
+    scanBtn.disabled = false;
+
+    scanBtn.innerText =
+      "📷 Scan QR Code";
+  }
+}
+
+
+/* =========================================================
+   RESET EVERYTHING
+========================================================= */
+
+function resetForm() {
+
+  console.log("Reset requested.");
+
+
+  /*
+   * Cancel an active verification request.
+   *
+   * This is important because otherwise an old
+   * server response could arrive after Reset
+   * and put the old result back on screen.
+   */
+
+  if (verifyController) {
+
+    verifyController.abort();
+
+    verifyController = null;
+  }
+
+
+  /*
+   * Stop scanner.
+   */
+
+  if (scanner && scanning) {
+
+    scanner.stop()
+
+      .catch(error => {
+
+        console.warn(
+          "Scanner stop during reset:",
+          error
+        );
+
+      })
+
+      .finally(() => {
+
+        scanner = null;
+        scanning = false;
+
+        finishReset();
+
+      });
+
+  } else {
+
+    finishReset();
+
+  }
+
+}
+
+
+/* =========================================================
+   COMPLETE RESET UI
+========================================================= */
+
+function finishReset() {
+
+  /*
+   * Clear all input fields
+   */
+
+  document.getElementById(
+    "passwordInput"
+  ).value = "";
+
+  document.getElementById(
+    "regIdInput"
+  ).value = "";
+
+  document.getElementById(
+    "emailInput"
+  ).value = "";
+
+
+  /*
+   * Hide QR reader
+   */
+
+  const qrReader =
+    document.getElementById("qr-reader");
+
+  qrReader.style.display = "none";
+
+
+  /*
+   * Restore Scan button
+   */
+
+  const scanBtn =
+    document.getElementById("scanBtn");
+
+  scanBtn.disabled = false;
+
+  scanBtn.innerText =
+    "📷 Scan QR Code";
+
+
+  /*
+   * Restore Submit button
+   */
+
+  const submitBtn =
+    document.getElementById("submitBtn");
+
+  submitBtn.disabled = false;
+
+  submitBtn.innerText = "Submit";
+
+  delete submitBtn.dataset.origText;
+
+
+  /*
+   * Clear all result messages
+   */
+
+  document.getElementById(
+    "statusMsg"
+  ).innerHTML = "";
+
+  document.getElementById(
+    "regIdMsg"
+  ).innerHTML = "";
+
+  document.getElementById(
+    "emailMsg"
+  ).innerHTML = "";
+
+  document.getElementById(
+    "fullNameMsg"
+  ).innerHTML = "";
+
+  document.getElementById(
+    "attendeeMsg"
+  ).innerHTML = "";
+
+  document.getElementById(
+    "paymentMsg"
+  ).innerHTML = "";
+
+
+  /*
+   * Remove status color
+   */
+
+  document.getElementById(
+    "statusMsg"
+  ).className = "";
+
+
+  /*
+   * Hide result box
+   */
+
+  document.getElementById(
+    "resultBox"
+  ).style.display = "none";
+
+
+  /*
+   * Reset scanner variables
+   */
+
+  scanning = false;
+  scanner = null;
+
+
+  console.log("Form completely reset.");
+}
+
+
+/* =========================================================
+   SUBMIT REGISTRATION ID / EMAIL
+========================================================= */
+
+function submitId() {
+
+  const regId =
+    document.getElementById(
+      "regIdInput"
+    ).value.trim();
+
+  const email =
+    document.getElementById(
+      "emailInput"
+    ).value.trim();
+
+  const pass =
+    document.getElementById(
+      "passwordInput"
+    ).value.trim();
+
+
+  /*
+   * Password validation
+   */
+
+  if (!pass) {
+
+    showStatus(
+      "Enter password",
+      "error"
+    );
+
+    document.getElementById(
+      "resultBox"
+    ).style.display = "block";
+
+    return;
+  }
+
+
+  /*
+   * Registration ID / Email validation
+   */
+
+  if (!regId && !email) {
+
+    showStatus(
+      "Enter Registration ID or Email",
+      "error"
+    );
+
+    document.getElementById(
+      "resultBox"
+    ).style.display = "block";
+
+    return;
+  }
+
+
+  /*
+   * Cancel previous request if one exists.
+   */
+
+  if (verifyController) {
+    verifyController.abort();
+  }
+
+  verifyController =
+    new AbortController();
+
+
+  /*
+   * Build request parameters
+   */
+
+  const params =
+    new URLSearchParams();
+
+  params.append(
+    "mode",
+    "verify"
+  );
+
+  params.append(
+    "password",
+    pass
+  );
+
+
+  if (regId) {
+
+    params.append(
+      "registrationId",
+      regId
+    );
+
+  } else {
+
+    params.append(
+      "email",
+      email
+    );
+  }
+
+
+  /*
+   * Loading state
+   */
+
+  setLoading(true);
+
+  showStatus(
+    "Verifying...",
+    ""
+  );
+
+  document.getElementById(
+    "resultBox"
+  ).style.display = "block";
+
+
+  /*
+   * Send request
+   */
+
+  fetch(
+    `${WEB_APP_URL}?${params.toString()}`,
+    {
+      signal: verifyController.signal
+    }
+  )
+
+    .then(response => {
+
+      if (!response.ok) {
+        throw new Error(
+          "HTTP error " +
+          response.status
+        );
+      }
+
+      return response.json();
+
+    })
+
+    .then(data => {
+
+      handleResponse(data);
+
+    })
+
+    .catch(error => {
+
+      /*
+       * Ignore AbortError because Reset
+       * intentionally cancelled the request.
+       */
+
+      if (error.name === "AbortError") {
         return;
       }
 
-      // Fallback: if data is array of records, compute aggregates client-side (also count unique registrationIds)
-      const memberTotals = { registrationsSet: new Set(), adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
-      const nonMemberTotals = { registrationsSet: new Set(), adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
-      const memberGuestTotals = { registrationsSet: new Set(), adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
-      const allIds = new Set();
+      console.error(
+        "Verification error:",
+        error
+      );
+
+      showStatus(
+        "Server error. Try again.",
+        "error"
+      );
+
+    })
+
+    .finally(() => {
+
+      setLoading(false);
+
+      verifyController = null;
+
+    });
+
+}
+
+
+/* =========================================================
+   HANDLE SERVER RESPONSE
+========================================================= */
+
+function handleResponse(data) {
+
+  document.getElementById(
+    "resultBox"
+  ).style.display = "block";
+
+
+  /*
+   * Authentication failed
+   */
+
+  if (data.status === "AUTH_FAILED") {
+
+    showStatus(
+      "Incorrect password",
+      "error"
+    );
+
+    return;
+  }
+
+
+  /*
+   * Missing registration ID
+   */
+
+  if (data.status === "MISSING_ID") {
+
+    showStatus(
+      "Missing registration ID",
+      "error"
+    );
+
+    return;
+  }
+
+
+  /*
+   * Determine status color
+   */
+
+  let cssClass =
+    data.status === "Updated successfully"
+      ? "success"
+      : data.status === "Already updated"
+        ? "warning"
+        : "error";
+
+
+  showStatus(
+    data.status || "Unknown response",
+    cssClass
+  );
+
+
+  /*
+   * Registration ID
+   */
+
+  document.getElementById(
+    "regIdMsg"
+  ).innerHTML =
+    data.registrationId
+      ? "Registration ID: <b>" +
+        escapeHtml(
+          data.registrationId
+        ) +
+        "</b>"
+      : "";
+
+
+  /*
+   * Email
+   */
+
+  document.getElementById(
+    "emailMsg"
+  ).innerHTML =
+    data.email
+      ? "Email: <b>" +
+        escapeHtml(
+          data.email
+        ) +
+        "</b>"
+      : "";
+
+
+  /*
+   * Full name
+   */
+
+  document.getElementById(
+    "fullNameMsg"
+  ).innerHTML =
+    data.fullName
+      ? "Name: <b>" +
+        escapeHtml(
+          data.fullName
+        ) +
+        "</b>"
+      : "";
+
+
+  /*
+   * Attendees
+   */
+
+  document.getElementById(
+    "attendeeMsg"
+  ).innerHTML =
+    data.attendeeNames
+      ? "Attendees: <b>" +
+        escapeHtml(
+          data.attendeeNames
+        ) +
+        "</b>"
+      : "";
+
+
+  /*
+   * Payment
+   */
+
+  document.getElementById(
+    "paymentMsg"
+  ).innerHTML =
+    data.paymentStatus
+      ? "Payment Status: <b>" +
+        escapeHtml(
+          data.paymentStatus
+        ) +
+        "</b>"
+      : "";
+}
+
+
+/* =========================================================
+   SHOW STATUS
+========================================================= */
+
+function showStatus(msg, type) {
+
+  const el =
+    document.getElementById(
+      "statusMsg"
+    );
+
+  el.className = type || "";
+
+  el.innerHTML = msg;
+}
+
+
+/* =========================================================
+   LOADING STATE
+========================================================= */
+
+function setLoading(isLoading) {
+
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
+
+  const scanBtn =
+    document.getElementById(
+      "scanBtn"
+    );
+
+
+  if (isLoading) {
+
+    /*
+     * Save original button text.
+     */
+
+    submitBtn.dataset.origText =
+      submitBtn.innerHTML;
+
+    submitBtn.innerHTML =
+      "Verifying...";
+
+    submitBtn.disabled = true;
+
+    scanBtn.disabled = true;
+
+  } else {
+
+    /*
+     * Restore Submit button.
+     */
+
+    submitBtn.innerHTML =
+      submitBtn.dataset.origText ||
+      "Submit";
+
+    submitBtn.disabled = false;
+
+    /*
+     * Do not enable Scan button if
+     * scanner is actually running.
+     */
+
+    scanBtn.disabled =
+      scanning;
+  }
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(unsafe) {
+
+  return String(unsafe)
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+function safeNum(v) {
+
+  const n = Number(v);
+
+  return Number.isFinite(n)
+    ? Math.round(n)
+    : 0;
+}
+
+
+/* =========================================================
+   EMPTY DASHBOARD ROW
+========================================================= */
+
+function zeroRow() {
+
+  return {
+    registrations: 0,
+    adults: 0,
+    kids: 0,
+    veg: 0,
+    nonveg: 0,
+    attend: 0,
+    paid: 0
+  };
+}
+
+
+/* =========================================================
+   LOAD DASHBOARD
+========================================================= */
+
+function loadDashboard() {
+
+  const tbody =
+    document.getElementById(
+      "dashboardBody"
+    );
+
+  /*
+   * Clear previous dashboard.
+   */
+
+  tbody.innerHTML = "";
+
+
+  /*
+   * Render a dashboard row.
+   */
+
+  function rowHtml(label, t) {
+
+    return `
+      <tr>
+        <td>${label}</td>
+        <td>${t.registrations || 0}</td>
+        <td>${t.adults || 0}</td>
+        <td>${t.kids || 0}</td>
+        <td>${t.veg || 0}</td>
+        <td>${t.nonveg || 0}</td>
+        <td>${t.attend || 0}</td>
+        <td>${t.paid || 0}</td>
+      </tr>
+    `;
+  }
+
+
+  /*
+   * Request dashboard data.
+   */
+
+  fetch(
+    `${WEB_APP_URL}?mode=dashboard`
+  )
+
+    .then(res => {
+
+      const contentType =
+        (
+          res.headers.get(
+            "content-type"
+          ) || ""
+        ).toLowerCase();
+
+
+      if (
+        !res.ok ||
+        !contentType.includes(
+          "application/json"
+        )
+      ) {
+
+        throw new Error(
+          "Web app did not return JSON. " +
+          "It may require Google sign-in " +
+          "or the Web App deployment may not " +
+          "be accessible."
+        );
+      }
+
+      return res.json();
+
+    })
+
+
+    .then(data => {
+
+      console.log(
+        "Dashboard response:",
+        data
+      );
+
+
+      /*
+       * Backend aggregated format
+       */
+
+      if (
+        data &&
+        typeof data === "object" &&
+        "member" in data &&
+        "nonMember" in data &&
+        "total" in data
+      ) {
+
+        tbody.innerHTML +=
+          rowHtml(
+            "Member",
+            data.member ||
+              zeroRow()
+          );
+
+        tbody.innerHTML +=
+          rowHtml(
+            "Guest",
+            data.memberGuest ||
+              zeroRow()
+          );
+
+        tbody.innerHTML +=
+          rowHtml(
+            "Non-member",
+            data.nonMember ||
+              zeroRow()
+          );
+
+        tbody.innerHTML +=
+          rowHtml(
+            "Total",
+            data.total ||
+              zeroRow()
+          );
+
+        return;
+      }
+
+
+      /*
+       * Fallback:
+       * Backend returned an array.
+       *
+       * Calculate totals on client side.
+       */
+
+      const memberTotals = {
+
+        registrationsSet:
+          new Set(),
+
+        adults: 0,
+        kids: 0,
+        veg: 0,
+        nonveg: 0,
+        attend: 0,
+        paid: 0
+
+      };
+
+
+      const nonMemberTotals = {
+
+        registrationsSet:
+          new Set(),
+
+        adults: 0,
+        kids: 0,
+        veg: 0,
+        nonveg: 0,
+        attend: 0,
+        paid: 0
+
+      };
+
+
+      const memberGuestTotals = {
+
+        registrationsSet:
+          new Set(),
+
+        adults: 0,
+        kids: 0,
+        veg: 0,
+        nonveg: 0,
+        attend: 0,
+        paid: 0
+
+      };
+
+
+      const allIds =
+        new Set();
+
+
+      /*
+       * Process records.
+       */
 
       if (Array.isArray(data)) {
+
         data.forEach(record => {
-          const regId = (record.registrationId || record.registrationId === 0) ? String(record.registrationId).trim() : ('row_' + Math.random().toString(36).slice(2,8));
+
+          /*
+           * Registration ID
+           */
+
+          const regId =
+            (
+              record.registrationId ||
+              record.registrationId === 0
+            )
+
+              ? String(
+                  record.registrationId
+                ).trim()
+
+              : (
+                  "row_" +
+                  Math.random()
+                    .toString(36)
+                    .slice(2, 8)
+                );
+
+
           allIds.add(regId);
 
-          const isMemberVal = (record.isMember || '').toString().trim().toLowerCase();
-          const isMember = isMemberVal === 'yes' || isMemberVal === 'true' || isMemberVal === 'y';
-          const isMemberGuest = isMemberVal === 'guest';
-          const target = isMember ? memberTotals : (isMemberGuest ? memberGuestTotals : nonMemberTotals);
 
-          target.registrationsSet.add(regId);
-          target.adults += safeNum(record.adults || 0);
+          /*
+           * Member type
+           */
 
-          if(record.kids && record.kids.toString().toLowerCase() !== 'none'){
-            target.kids += safeNum(record.kids);
+          const isMemberVal =
+            (
+              record.isMember ||
+              ""
+            )
+              .toString()
+              .trim()
+              .toLowerCase();
+
+
+          const isMember =
+            isMemberVal === "yes" ||
+            isMemberVal === "true" ||
+            isMemberVal === "y";
+
+
+          const isMemberGuest =
+            isMemberVal === "guest";
+
+
+          const target =
+            isMember
+              ? memberTotals
+              : (
+                  isMemberGuest
+                    ? memberGuestTotals
+                    : nonMemberTotals
+                );
+
+
+          /*
+           * Registration count
+           */
+
+          target.registrationsSet.add(
+            regId
+          );
+
+
+          /*
+           * Adults
+           */
+
+          target.adults +=
+            safeNum(
+              record.adults || 0
+            );
+
+
+          /*
+           * Kids
+           */
+
+          if (
+            record.kids &&
+            record.kids
+              .toString()
+              .toLowerCase() !== "none"
+          ) {
+
+            target.kids +=
+              safeNum(
+                record.kids
+              );
           }
 
-          if(record.foodPreference){
-            const food = record.foodPreference.toString().toLowerCase();
-            if(food.includes('non')){
+
+          /*
+           * Food preference
+           */
+
+          if (record.foodPreference) {
+
+            const food =
+              record.foodPreference
+                .toString()
+                .toLowerCase();
+
+
+            if (
+              food.includes("non")
+            ) {
+
               target.nonveg += 1;
-            } else if(food.includes('veg')){
+
+            } else if (
+              food.includes("veg")
+            ) {
+
               target.veg += 1;
             }
           }
 
-          if((record.attendStatus || '').toString().toLowerCase() === 'ok'){
+
+          /*
+           * Attendance
+           */
+
+          if (
+            (
+              record.attendStatus ||
+              ""
+            )
+              .toString()
+              .toLowerCase() === "ok"
+          ) {
+
             target.attend += 1;
           }
 
-          if((record.paymentStatus || '').toString().toLowerCase() === 'ok'){
+
+          /*
+           * Payment
+           */
+
+          if (
+            (
+              record.paymentStatus ||
+              ""
+            )
+              .toString()
+              .toLowerCase() === "ok"
+          ) {
+
             target.paid += 1;
           }
+
         });
 
+
+        /*
+         * Convert member totals
+         */
+
         const memberOut = {
-          registrations: memberTotals.registrationsSet.size,
-          adults: memberTotals.adults,
-          kids: memberTotals.kids,
-          veg: memberTotals.veg,
-          nonveg: memberTotals.nonveg,
-          attend: memberTotals.attend,
-          paid: memberTotals.paid
-        };
-        const memberGuestOut = {
-          registrations: memberGuestTotals.registrationsSet.size,
-          adults: memberGuestTotals.adults,
-          kids: memberGuestTotals.kids,
-          veg: memberGuestTotals.veg,
-          nonveg: memberGuestTotals.nonveg,
-          attend: memberGuestTotals.attend,
-          paid: memberGuestTotals.paid
-        };
-        const nonMemberOut = {
-          registrations: nonMemberTotals.registrationsSet.size,
-          adults: nonMemberTotals.adults,
-          kids: nonMemberTotals.kids,
-          veg: nonMemberTotals.veg,
-          nonveg: nonMemberTotals.nonveg,
-          attend: nonMemberTotals.attend,
-          paid: nonMemberTotals.paid
-        };
-        const totalOut = {
-          registrations: allIds.size,
-          adults: memberOut.adults + nonMemberOut.adults + memberGuestOut.adults,
-          kids: memberOut.kids + nonMemberOut.kids + memberGuestOut.kids,
-          veg: memberOut.veg + nonMemberOut.veg + memberGuestOut.veg,
-          nonveg: memberOut.nonveg + nonMemberOut.nonveg + memberGuestOut.nonveg,
-          attend: memberOut.attend + nonMemberOut.attend + memberGuestOut.attend,
-          paid: memberOut.paid + nonMemberOut.paid + memberGuestOut.paid
+
+          registrations:
+            memberTotals
+              .registrationsSet
+              .size,
+
+          adults:
+            memberTotals.adults,
+
+          kids:
+            memberTotals.kids,
+
+          veg:
+            memberTotals.veg,
+
+          nonveg:
+            memberTotals.nonveg,
+
+          attend:
+            memberTotals.attend,
+
+          paid:
+            memberTotals.paid
         };
 
-        tbody.innerHTML += rowHtml('Member', memberOut);
-        tbody.innerHTML += rowHtml('Guest', memberGuestOut);
-        tbody.innerHTML += rowHtml('Non-member', nonMemberOut);
-        tbody.innerHTML += rowHtml('Total', totalOut);
+
+        /*
+         * Convert guest totals
+         */
+
+        const memberGuestOut = {
+
+          registrations:
+            memberGuestTotals
+              .registrationsSet
+              .size,
+
+          adults:
+            memberGuestTotals.adults,
+
+          kids:
+            memberGuestTotals.kids,
+
+          veg:
+            memberGuestTotals.veg,
+
+          nonveg:
+            memberGuestTotals.nonveg,
+
+          attend:
+            memberGuestTotals.attend,
+
+          paid:
+            memberGuestTotals.paid
+        };
+
+
+        /*
+         * Convert non-member totals
+         */
+
+        const nonMemberOut = {
+
+          registrations:
+            nonMemberTotals
+              .registrationsSet
+              .size,
+
+          adults:
+            nonMemberTotals.adults,
+
+          kids:
+            nonMemberTotals.kids,
+
+          veg:
+            nonMemberTotals.veg,
+
+          nonveg:
+            nonMemberTotals.nonveg,
+
+          attend:
+            nonMemberTotals.attend,
+
+          paid:
+            nonMemberTotals.paid
+        };
+
+
+        /*
+         * Total
+         */
+
+        const totalOut = {
+
+          registrations:
+            allIds.size,
+
+          adults:
+            memberOut.adults +
+            nonMemberOut.adults +
+            memberGuestOut.adults,
+
+          kids:
+            memberOut.kids +
+            nonMemberOut.kids +
+            memberGuestOut.kids,
+
+          veg:
+            memberOut.veg +
+            nonMemberOut.veg +
+            memberGuestOut.veg,
+
+          nonveg:
+            memberOut.nonveg +
+            nonMemberOut.nonveg +
+            memberGuestOut.nonveg,
+
+          attend:
+            memberOut.attend +
+            nonMemberOut.attend +
+            memberGuestOut.attend,
+
+          paid:
+            memberOut.paid +
+            nonMemberOut.paid +
+            memberGuestOut.paid
+        };
+
+
+        /*
+         * Render four rows.
+         */
+
+        tbody.innerHTML +=
+          rowHtml(
+            "Member",
+            memberOut
+          );
+
+        tbody.innerHTML +=
+          rowHtml(
+            "Guest",
+            memberGuestOut
+          );
+
+        tbody.innerHTML +=
+          rowHtml(
+            "Non-member",
+            nonMemberOut
+          );
+
+        tbody.innerHTML +=
+          rowHtml(
+            "Total",
+            totalOut
+          );
+
         return;
       }
 
-      // Unknown shape: render zeros but keep four rows as required
-      tbody.innerHTML += rowHtml('Member', zeroRow());
-      tbody.innerHTML += rowHtml('Guest', zeroRow());
-      tbody.innerHTML += rowHtml('Non-member', zeroRow());
-      tbody.innerHTML += rowHtml('Total', zeroRow());
+
+      /*
+       * Unknown response shape.
+       * Show four empty rows.
+       */
+
+      tbody.innerHTML +=
+        rowHtml(
+          "Member",
+          zeroRow()
+        );
+
+      tbody.innerHTML +=
+        rowHtml(
+          "Guest",
+          zeroRow()
+        );
+
+      tbody.innerHTML +=
+        rowHtml(
+          "Non-member",
+          zeroRow()
+        );
+
+      tbody.innerHTML +=
+        rowHtml(
+          "Total",
+          zeroRow()
+        );
+
     })
-    .catch(err=>{
-      console.error("Failed to load dashboard", err);
-      tbody.innerHTML += rowHtml('Member', zeroRow());
-      tbody.innerHTML += rowHtml('Guest', zeroRow());
-      tbody.innerHTML += rowHtml('Non-member', zeroRow());
-      tbody.innerHTML += rowHtml('Total', zeroRow());
-      alert("Failed to load dashboard: " + (err && err.message ? err.message : 'unknown error'));
+
+
+    .catch(error => {
+
+      console.error(
+        "Failed to load dashboard:",
+        error
+      );
+
+
+      /*
+       * Keep four rows visible even
+       * when dashboard fails.
+       */
+
+      tbody.innerHTML = "";
+
+      tbody.innerHTML +=
+        rowHtml(
+          "Member",
+          zeroRow()
+        );
+
+      tbody.innerHTML +=
+        rowHtml(
+          "Guest",
+          zeroRow()
+        );
+
+      tbody.innerHTML +=
+        rowHtml(
+          "Non-member",
+          zeroRow()
+        );
+
+      tbody.innerHTML +=
+        rowHtml(
+          "Total",
+          zeroRow()
+        );
+
+
+      alert(
+        "Failed to load dashboard: " +
+        (
+          error &&
+          error.message
+            ? error.message
+            : "Unknown error"
+        )
+      );
+
     });
+
 }
+
 </script>
 
 </body>
