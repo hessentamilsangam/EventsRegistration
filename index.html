@@ -66,14 +66,13 @@ th { background:#007bff; color:white;}
       </tr>
     </thead>
     <tbody id="dashboardBody">
-      <!-- Exactly 3 rows will be rendered here: Member, Non-member, Total -->
+      <!-- Exactly 4 rows will be rendered here: Member, Member Guest, Non-member, Total -->
     </tbody>
   </table>
 </section>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz70Ps449m1rBx6_CZilAXv8R5pe7J7Km8iQQy3ya2IWIyzICEoaC95H_DfFmcIEmnp/exec"; // <-- replace with your /exec URL
-
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxjU98qaVHoaAwN3gfTlEJEKGa61Ep8jS4FhxVNu0phB5GlsnLYQF2-4-KbWQw6pN3m/exec"
 // TAB SWITCHING
 function showSection(id, btn){
   document.querySelectorAll('section').forEach(s=>s.style.display='none');
@@ -223,6 +222,10 @@ function safeNum(v){
   return Number.isFinite(n) ? Math.round(n) : 0;
 }
 
+function zeroRow(){
+  return { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
+}
+
 function loadDashboard(){
   const tbody = document.getElementById("dashboardBody");
   tbody.innerHTML=""; // clear
@@ -255,6 +258,7 @@ function loadDashboard(){
       // If backend returns the new aggregated shape
       if (data && typeof data === 'object' && 'member' in data && 'nonMember' in data && 'total' in data) {
         tbody.innerHTML += rowHtml('Member', data.member);
+        tbody.innerHTML += rowHtml('Member Guest', data.memberGuest || zeroRow());
         tbody.innerHTML += rowHtml('Non-member', data.nonMember);
         tbody.innerHTML += rowHtml('Total', data.total);
         return;
@@ -263,6 +267,7 @@ function loadDashboard(){
       // Fallback: if data is array of records, compute aggregates client-side (also count unique registrationIds)
       const memberTotals = { registrationsSet: new Set(), adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
       const nonMemberTotals = { registrationsSet: new Set(), adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
+      const memberGuestTotals = { registrationsSet: new Set(), adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 };
       const allIds = new Set();
 
       if (Array.isArray(data)) {
@@ -270,8 +275,10 @@ function loadDashboard(){
           const regId = (record.registrationId || record.registrationId === 0) ? String(record.registrationId).trim() : ('row_' + Math.random().toString(36).slice(2,8));
           allIds.add(regId);
 
-          const isMember = (record.isMember || '').toString().toLowerCase() === 'yes';
-          const target = isMember ? memberTotals : nonMemberTotals;
+          const isMemberVal = (record.isMember || '').toString().trim().toLowerCase();
+          const isMember = isMemberVal === 'yes' || isMemberVal === 'true' || isMemberVal === 'y';
+          const isMemberGuest = isMemberVal === 'guest';
+          const target = isMember ? memberTotals : (isMemberGuest ? memberGuestTotals : nonMemberTotals);
 
           target.registrationsSet.add(regId);
           target.adults += safeNum(record.adults || 0);
@@ -282,10 +289,10 @@ function loadDashboard(){
 
           if(record.foodPreference){
             const food = record.foodPreference.toString().toLowerCase();
-            if(food.includes('veg')){
-              target.veg += 1;
-            } else if(food.includes('non')){
+            if(food.includes('non')){
               target.nonveg += 1;
+            } else if(food.includes('veg')){
+              target.veg += 1;
             }
           }
 
@@ -307,6 +314,15 @@ function loadDashboard(){
           attend: memberTotals.attend,
           paid: memberTotals.paid
         };
+        const memberGuestOut = {
+          registrations: memberGuestTotals.registrationsSet.size,
+          adults: memberGuestTotals.adults,
+          kids: memberGuestTotals.kids,
+          veg: memberGuestTotals.veg,
+          nonveg: memberGuestTotals.nonveg,
+          attend: memberGuestTotals.attend,
+          paid: memberGuestTotals.paid
+        };
         const nonMemberOut = {
           registrations: nonMemberTotals.registrationsSet.size,
           adults: nonMemberTotals.adults,
@@ -318,30 +334,33 @@ function loadDashboard(){
         };
         const totalOut = {
           registrations: allIds.size,
-          adults: memberOut.adults + nonMemberOut.adults,
-          kids: memberOut.kids + nonMemberOut.kids,
-          veg: memberOut.veg + nonMemberOut.veg,
-          nonveg: memberOut.nonveg + nonMemberOut.nonveg,
-          attend: memberOut.attend + nonMemberOut.attend,
-          paid: memberOut.paid + nonMemberOut.paid
+          adults: memberOut.adults + nonMemberOut.adults + memberGuestOut.adults,
+          kids: memberOut.kids + nonMemberOut.kids + memberGuestOut.kids,
+          veg: memberOut.veg + nonMemberOut.veg + memberGuestOut.veg,
+          nonveg: memberOut.nonveg + nonMemberOut.nonveg + memberGuestOut.nonveg,
+          attend: memberOut.attend + nonMemberOut.attend + memberGuestOut.attend,
+          paid: memberOut.paid + nonMemberOut.paid + memberGuestOut.paid
         };
 
         tbody.innerHTML += rowHtml('Member', memberOut);
+        tbody.innerHTML += rowHtml('Member Guest', memberGuestOut);
         tbody.innerHTML += rowHtml('Non-member', nonMemberOut);
         tbody.innerHTML += rowHtml('Total', totalOut);
         return;
       }
 
-      // Unknown shape: render zeros but keep three rows as required
-      tbody.innerHTML += rowHtml('Member', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
-      tbody.innerHTML += rowHtml('Non-member', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
-      tbody.innerHTML += rowHtml('Total', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
+      // Unknown shape: render zeros but keep four rows as required
+      tbody.innerHTML += rowHtml('Member', zeroRow());
+      tbody.innerHTML += rowHtml('Member Guest', zeroRow());
+      tbody.innerHTML += rowHtml('Non-member', zeroRow());
+      tbody.innerHTML += rowHtml('Total', zeroRow());
     })
     .catch(err=>{
       console.error("Failed to load dashboard", err);
-      tbody.innerHTML += rowHtml('Member', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
-      tbody.innerHTML += rowHtml('Non-member', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
-      tbody.innerHTML += rowHtml('Total', { registrations:0, adults:0, kids:0, veg:0, nonveg:0, attend:0, paid:0 });
+      tbody.innerHTML += rowHtml('Member', zeroRow());
+      tbody.innerHTML += rowHtml('Member Guest', zeroRow());
+      tbody.innerHTML += rowHtml('Non-member', zeroRow());
+      tbody.innerHTML += rowHtml('Total', zeroRow());
       alert("Failed to load dashboard: " + (err && err.message ? err.message : 'unknown error'));
     });
 }
