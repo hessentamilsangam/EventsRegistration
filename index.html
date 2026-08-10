@@ -78,7 +78,7 @@ th{background:#007bff;color:#fff}
 </section>
 
 <script>
-const WEB_APP_URL="https://script.google.com/macros/s/AKfycby5xcTNwlMmTeb_HTqrELoWeaj0Okn0rfrKMVTXLqU1NAyc0qKNlaj5fHFlF1rzT_l1/exec";
+const WEB_APP_URL="https://script.google.com/macros/s/AKfycbySokzrSz_NBa19ErcVSHEGUtM2krIYGwspT-pTGyrll1etyhCM9khCwr3pGuN3v0d1/exec";
 let scanner=null,scanning=false,verifyController=null;
 
 /* TABS */
@@ -157,24 +157,49 @@ function submitId(){
 
 /* RESULT */
 function handleResponse(data){
-  const box=document.getElementById("resultBox"),btn=document.getElementById("updatePaymentBtn");
+  const box=document.getElementById("resultBox");
+  const btn=document.getElementById("updatePaymentBtn");
+  const msg=document.getElementById("paymentUpdateMsg");
+
   box.style.display="block";
-  btn.style.display="none";btn.disabled=false;btn.innerText="💳 Update Payment";
+  btn.style.display="none";
+  btn.disabled=false;
+  btn.innerText="💳 Update Payment";
   btn.dataset.registrationId="";
-  document.getElementById("paymentUpdateMsg").innerHTML="";
+  msg.innerHTML="";
 
-  if(data.status==="AUTH_FAILED"){showResult("Incorrect password","error");return}
-  if(data.status==="MISSING_ID"){showResult("Missing registration ID","error");return}
+  if(data.status==="AUTH_FAILED"){
+    showResult("Incorrect password","error");
+    return;
+  }
 
-  const cls=data.status==="Updated successfully"?"success":data.status==="Already updated"?"warning":"error";
-  showResult(data.status||"Unknown response",cls);
+  if(data.status==="MISSING_ID"){
+    showResult("Missing registration ID","error");
+    return;
+  }
 
-  document.getElementById("regIdMsg").innerHTML=data.registrationId?"Registration ID: <b>"+escapeHtml(data.registrationId)+"</b>":"";
-  document.getElementById("emailMsg").innerHTML=data.email?"Email: <b>"+escapeHtml(data.email)+"</b>":"";
-  document.getElementById("fullNameMsg").innerHTML=data.fullName?"Name: <b>"+escapeHtml(data.fullName)+"</b>":"";
-  document.getElementById("attendeeMsg").innerHTML=data.attendeeNames?"Attendees: <b>"+escapeHtml(data.attendeeNames)+"</b>":"";
-  document.getElementById("paymentMsg").innerHTML=data.paymentStatus?"Payment Status: <b>"+escapeHtml(data.paymentStatus)+"</b>":"";
+  const cls=data.status==="Found"?"success":"error";
+  showResult(data.message||data.status,cls);
 
+  document.getElementById("regIdMsg").innerHTML=data.registrationId
+    ?"Registration ID: <b>"+escapeHtml(data.registrationId)+"</b>":"";
+
+  document.getElementById("emailMsg").innerHTML=data.email
+    ?"Email: <b>"+escapeHtml(data.email)+"</b>":"";
+
+  document.getElementById("fullNameMsg").innerHTML=data.fullName
+    ?"Name: <b>"+escapeHtml(data.fullName)+"</b>":"";
+
+  document.getElementById("attendeeMsg").innerHTML=data.attendeeNames
+    ?"Attendees: <b>"+escapeHtml(data.attendeeNames)+"</b>":"";
+
+  document.getElementById("paymentMsg").innerHTML=data.paymentStatus
+    ?"Payment Status: <b>"+escapeHtml(data.paymentStatus)+"</b>":"";
+
+  /*
+   * ALWAYS show Update Payment when a Registration ID
+   * exists in the result.
+   */
   if(data.registrationId){
     btn.dataset.registrationId=String(data.registrationId).trim();
     btn.style.display="block";
