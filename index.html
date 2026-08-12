@@ -78,7 +78,7 @@ th{background:#007bff;color:#fff}
 </section>
 
 <script>
-const WEB_APP_URL="https://script.google.com/macros/s/AKfycbySokzrSz_NBa19ErcVSHEGUtM2krIYGwspT-pTGyrll1etyhCM9khCwr3pGuN3v0d1/exec";
+const WEB_APP_URL="https://script.google.com/macros/s/AKfycbzRkhaeGjB-i7B9UBJtiwbikgjngE-iXWGL-IA5M2c2_USznm8Ey_mQWkrdkmLP1H4_/exec";
 let scanner=null,scanning=false,verifyController=null;
 
 /* TABS */
@@ -143,6 +143,15 @@ function submitId(){
   if(verifyController)verifyController.abort();
   verifyController=new AbortController();
 
+  // Clear previous result area and reset update-payment UI before new submit
+  const box=document.getElementById("resultBox");
+  box.style.display="block";
+  ["statusMsg","regIdMsg","emailMsg","fullNameMsg","attendeeMsg","paymentMsg"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML="";
+  });
+  const pmsg=document.getElementById("paymentUpdateMsg"); if(pmsg){ pmsg.innerHTML=""; pmsg.className=""; }
+  const upbtn=document.getElementById("updatePaymentBtn"); if(upbtn){ upbtn.style.display="none"; upbtn.dataset.registrationId=""; upbtn.disabled=false; upbtn.innerText="💳 Update Payment"; }
+
   const p=new URLSearchParams({mode:"verify",password:pass});
   if(reg)p.append("registrationId",reg);else p.append("email",email);
 
@@ -153,6 +162,16 @@ function submitId(){
     .then(handleResponse)
     .catch(e=>{if(e.name!=="AbortError")showResult("Server error. Try again.","error")})
     .finally(()=>{setLoading(false);verifyController=null});
+}
+
+// Fetch verification details for a given registration ID and re-render result
+function fetchVerifyById(reg, pass){
+  if(!reg || !pass) return;
+  const p=new URLSearchParams({mode:"verify",password:pass,registrationId:reg});
+  fetch(`${WEB_APP_URL}?${p}`)
+    .then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()})
+    .then(handleResponse)
+    .catch(e=>{console.error("Failed to refresh details",e)});
 }
 
 /* RESULT */
@@ -166,7 +185,7 @@ function handleResponse(data){
   btn.disabled=false;
   btn.innerText="💳 Update Payment";
   btn.dataset.registrationId="";
-  msg.innerHTML="";
+  // Do not clear `paymentUpdateMsg` here so update messages persist
 
   if(data.status==="AUTH_FAILED"){
     showResult("Incorrect password","error");
@@ -178,7 +197,9 @@ function handleResponse(data){
     return;
   }
 
-  const cls=data.status==="Found"?"success":"error";
+  const statusStr = String(data.status||"").toLowerCase();
+  const isSuccess = statusStr.includes("found") || statusStr.includes("updated") || statusStr.includes("already");
+  const cls = isSuccess ? "success" : (statusStr.includes("auth_failed") || statusStr.includes("error") || statusStr.includes("not found") ? "error" : "");
   showResult(data.message||data.status,cls);
 
   document.getElementById("regIdMsg").innerHTML=data.registrationId
@@ -229,11 +250,13 @@ function updatePayment(){
         document.getElementById("paymentMsg").innerHTML="Payment Status: <b>OK</b>";
         btn.innerText="✅ Payment Updated";
         btn.disabled=true;
+        fetchVerifyById(reg, pass);
       }else if(data.status==="Payment already updated"){
         msg.innerHTML='<span class="warning">Payment is already updated.</span>';
         document.getElementById("paymentMsg").innerHTML="Payment Status: <b>OK</b>";
         btn.innerText="✅ Already Updated";
         btn.disabled=true;
+        fetchVerifyById(reg, pass);
       }else{
         msg.innerHTML='<span class="error">'+escapeHtml(data.message||data.status||"Payment update failed.")+'</span>';
         btn.disabled=false;btn.innerText="💳 Update Payment";
@@ -251,19 +274,21 @@ function resetForm(){
   if(verifyController){verifyController.abort();verifyController=null}
 
   const finish=()=>{
-    ["passwordInput","regIdInput","emailInput"].forEach(id=>document.getElementById(id).value="");
+    ["regIdInput","emailInput"].forEach(id=>document.getElementById(id).value="");
 
     const btn=document.getElementById("scanBtn");
     btn.disabled=false;btn.innerText="📷 Scan QR Code";
     document.getElementById("qr-reader").style.display="none";
 
-    document.getElementById("resultBox").style.display="none";
-    ["statusMsg","regIdMsg","emailMsg","fullNameMsg","attendeeMsg","paymentMsg","paymentUpdateMsg"]
-      .forEach(id=>document.getElementById(id).innerHTML="");
+    // Clear and hide the result area so Reset fully resets the form
+    const box=document.getElementById("resultBox");
+    box.style.display="none";
+    ["statusMsg","regIdMsg","emailMsg","fullNameMsg","attendeeMsg","paymentMsg"].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.innerHTML="";
+    });
+    const pmsg=document.getElementById("paymentUpdateMsg"); if(pmsg) { pmsg.innerHTML=""; pmsg.className=""; }
+    const upbtn=document.getElementById("updatePaymentBtn"); if(upbtn){ upbtn.style.display="none"; upbtn.dataset.registrationId=""; upbtn.disabled=false; upbtn.innerText="💳 Update Payment"; }
 
-    const pay=document.getElementById("updatePaymentBtn");
-    pay.style.display="none";pay.disabled=false;
-    pay.innerText="💳 Update Payment";pay.dataset.registrationId="";
     scanner=null;scanning=false;
   };
 
